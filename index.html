@@ -286,6 +286,20 @@ footer{
   100%{opacity:0;transform:translate(-10px,-32px) scale(1.2)}
 }
 
+/* ------------------------------- bulles de la chambre (vue Dedans)
+   Le magma bouillonne : les bulles remontent puis crèvent en surface. */
+#c-bulles .bulle{transform-box:fill-box;transform-origin:50% 50%;animation:bulle 6s ease-in-out infinite}
+#c-bulles .bulle:nth-of-type(2){animation-duration:7.5s;animation-delay:-2.4s}
+#c-bulles .bulle:nth-of-type(3){animation-duration:5.2s;animation-delay:-1.1s}
+#c-bulles .bulle:nth-of-type(4){animation-duration:8.4s;animation-delay:-4.6s}
+#c-bulles .bulle:nth-of-type(5){animation-duration:6.8s;animation-delay:-3.3s}
+@keyframes bulle{
+  0%{opacity:0;transform:translate(0,12px) scale(.45)}
+  18%{opacity:.85}
+  72%{opacity:.5}
+  100%{opacity:0;transform:translate(-4px,-52px) scale(1.2)}
+}
+
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
 </style>
 </head>
@@ -375,7 +389,109 @@ footer{
             <stop offset="1" stop-color="#43975b"/>
           </linearGradient>
 
+          <!-- ============ dégradés (préfixe grad-c- : vue Dedans) ============ -->
+          <!-- sous-sol : la roche qui entoure la chambre magmatique -->
+          <linearGradient id="grad-c-sous-sol" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5b4a63"/>
+            <stop offset=".42" stop-color="#40334c"/>
+            <stop offset="1" stop-color="#281e36"/>
+          </linearGradient>
+          <!-- croûte externe du cône : mêmes arrêts que grad-d-cone, pour que
+               le fondu Dehors → Dedans ne fasse pas sauter la couleur du flanc -->
+          <linearGradient id="grad-c-flanc" x1="1" y1="0" x2=".1" y2=".8">
+            <stop offset="0" stop-color="#b3a0ad"/>
+            <stop offset=".38" stop-color="#8b7889"/>
+            <stop offset=".76" stop-color="#6b5b73"/>
+            <stop offset="1" stop-color="#584a63"/>
+          </linearGradient>
+          <linearGradient id="grad-c-strate-lave" x1="0" y1="0" x2=".22" y2="1">
+            <stop offset="0" stop-color="#76596c"/>
+            <stop offset="1" stop-color="#4a3752"/>
+          </linearGradient>
+          <linearGradient id="grad-c-strate-cendre" x1="0" y1="0" x2=".22" y2="1">
+            <stop offset="0" stop-color="#e7d3b6"/>
+            <stop offset="1" stop-color="#c1a68f"/>
+          </linearGradient>
+          <!-- le magma de la chambre : cœur jaune, bords rouges.
+               userSpaceOnUse : le dégradé suit la poche, pas la boîte du path
+               (qui déborde volontairement sous la chambre) -->
+          <radialGradient id="grad-c-magma" gradientUnits="userSpaceOnUse" cx="450" cy="474" r="200">
+            <stop offset="0" stop-color="#fff6c8"/>
+            <stop offset=".26" stop-color="#ffcb6d"/>
+            <stop offset=".58" stop-color="#ff8a42"/>
+            <stop offset="1" stop-color="#e8431f"/>
+          </radialGradient>
+          <linearGradient id="grad-c-colonne" x1="0" y1="0" x2=".3" y2="1">
+            <stop offset="0" stop-color="#fff3b4"/>
+            <stop offset=".2" stop-color="#ffbe66"/>
+            <stop offset="1" stop-color="#ff6a2e"/>
+          </linearGradient>
+          <radialGradient id="grad-c-chaleur" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#ff8a42" stop-opacity=".6"/>
+            <stop offset=".5" stop-color="#ff5a2a" stop-opacity=".24"/>
+            <stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/>
+          </radialGradient>
+          <!-- le vide : cheminée et cratère quand le magma est loin -->
+          <linearGradient id="grad-c-vide" x1="0" y1="0" x2=".45" y2="1">
+            <stop offset="0" stop-color="#40304a"/>
+            <stop offset="1" stop-color="#1e1529"/>
+          </linearGradient>
+          <linearGradient id="grad-c-bouchon" x1=".15" y1="0" x2=".85" y2="1">
+            <stop offset="0" stop-color="#ad9bab"/>
+            <stop offset=".5" stop-color="#7d6b84"/>
+            <stop offset="1" stop-color="#50435c"/>
+          </linearGradient>
+          <linearGradient id="grad-c-adventif" x1=".15" y1="0" x2=".7" y2="1">
+            <stop offset="0" stop-color="#ab9caa"/>
+            <stop offset=".55" stop-color="#7f6d84"/>
+            <stop offset="1" stop-color="#5a4c66"/>
+          </linearGradient>
+          <!-- userSpaceOnUse : un seul dégradé pour tout le chou-fleur -->
+          <linearGradient id="grad-c-panache" gradientUnits="userSpaceOnUse" x1="386" y1="116" x2="516" y2="4">
+            <stop offset="0" stop-color="#8b8296"/>
+            <stop offset=".55" stop-color="#b3aabe"/>
+            <stop offset="1" stop-color="#e2dbe9"/>
+          </linearGradient>
+          <linearGradient id="grad-c-coulee" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff0b0"/>
+            <stop offset=".3" stop-color="#ffb15c"/>
+            <stop offset="1" stop-color="#ff5a2a"/>
+          </linearGradient>
+          <linearGradient id="grad-c-fontaine" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#fff8dc"/>
+            <stop offset=".4" stop-color="#ffc36b"/>
+            <stop offset="1" stop-color="#ff6f3a" stop-opacity=".15"/>
+          </linearGradient>
+          <radialGradient id="grad-c-bombe" cx=".34" cy=".28" r=".85">
+            <stop offset="0" stop-color="#fff2c8"/>
+            <stop offset=".42" stop-color="#ff9b4a"/>
+            <stop offset="1" stop-color="#a8321a"/>
+          </radialGradient>
+
+          <!-- ============ découpes (vue Dedans) ============ -->
+          <!-- la silhouette EXACTE de #d-cone : les strates s'y arrêtent net -->
+          <clipPath id="clip-c-cone">
+            <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 Z"/>
+          </clipPath>
+          <!-- entonnoir + conduit : garde la colonne de magma dans la cheminée -->
+          <clipPath id="clip-c-cheminee">
+            <path d="M409 119 C416 150 434 168 437 196 L437 452 L463 452 L463 196 C466 168 484 150 491 119 Z"/>
+          </clipPath>
+          <!-- union cône + cône adventif + sous-sol : garde la cheminée
+               secondaire dans la roche, jamais dans le ciel -->
+          <clipPath id="clip-c-dike">
+            <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 Z"/>
+            <path d="M674 317.6 C690 302 706 288 716 279 L722 285 L728 279 C740 298 758 324 770 340 L720 340 C708 336 692 327.6 674 317.6 Z"/>
+            <rect x="0" y="336" width="900" height="224"/>
+          </clipPath>
+          <!-- la poche de la chambre : garde le magma dedans quand il monte -->
+          <clipPath id="clip-c-chambre">
+            <path d="M300 428 C296 392 322 368 362 366 C396 356 436 356 470 364 C520 354 592 372 600 420 C610 466 578 512 520 522 C470 532 410 530 366 518 C318 504 302 468 300 428 Z"/>
+          </clipPath>
+
           <!-- ============ formes réutilisées ============ -->
+          <!-- bombe volcanique : fuseau (pointu aux deux bouts) -->
+          <path id="c-bombe" d="M-13 0 Q0 -6.4 13 0 Q0 6.4 -13 0 Z"/>
           <!-- conifère : les étages n'ont pas de fill → ils héritent du <use> -->
           <g id="d-sapin">
             <rect x="-3" y="-11" width="6" height="13" rx="2" fill="#6d4c37"/>
@@ -780,6 +896,306 @@ footer{
             <use href="#d-oiseau" transform="translate(692 168) scale(1.15)"/>
             <use href="#d-oiseau" transform="translate(742 194) scale(.85)"/>
             <use href="#d-oiseau" transform="translate(654 206) scale(.7)"/>
+          </g>
+
+        </g>
+
+        <!-- ==================================================================
+             DEDANS — la grande coupe du strato-volcan
+             La silhouette est relevée sur #d-cone : base (180,340)→(720,340),
+             épaules du cratère (408,116)/(492,116), lèvre arrière (450,104).
+             Les strates sont des coquilles homothétiques de cette silhouette
+             (centre (450,340)), donc la coupe se superpose EXACTEMENT au cône
+             extérieur : aucune couture pendant le fondu Dehors → Dedans.
+             ================================================================== -->
+        <g id="g-dedans">
+
+          <!-- ---------- le sous-sol : la roche autour de la chambre ---------- -->
+          <g>
+            <rect x="0" y="336" width="900" height="224" fill="url(#grad-c-sous-sol)"/>
+            <!-- la surface : herbe, puis terre, puis roche -->
+            <rect x="0" y="336" width="900" height="15" fill="#6d5540"/>
+            <rect x="0" y="336" width="900" height="6" fill="#8ac795"/>
+            <rect x="0" y="340" width="900" height="3" fill="#5f9a6c" opacity=".7"/>
+            <!-- strates du sous-sol : elles passent derrière la chambre -->
+            <g fill="none" stroke="#7a6685" stroke-width="2.4" opacity=".4" stroke-linecap="round">
+              <path d="M0 374 C120 368 240 380 340 376"/>
+              <path d="M566 378 C680 370 800 382 900 374"/>
+              <path d="M0 412 C120 404 220 416 292 412"/>
+              <path d="M614 414 C700 406 820 416 900 410"/>
+              <path d="M0 466 C90 458 170 468 246 466"/>
+              <path d="M652 472 C740 464 840 474 900 468"/>
+              <path d="M0 520 C140 512 240 522 306 520"/>
+              <path d="M596 528 C700 520 820 530 900 526"/>
+            </g>
+            <!-- blocs de roche, pour que le sous-sol ne soit pas lisse -->
+            <g fill="#584a63" opacity=".45">
+              <path d="M84 392 l20 -7 12 12 -16 9 z"/>
+              <path d="M196 442 l17 -6 10 11 -14 8 z"/>
+              <path d="M62 494 l22 -8 13 13 -18 9 z"/>
+              <path d="M770 398 l19 -7 11 12 -15 8 z"/>
+              <path d="M690 460 l16 -6 10 10 -13 8 z"/>
+              <path d="M812 508 l21 -8 12 12 -17 9 z"/>
+              <path d="M330 552 l18 -7 11 11 -15 8 z"/>
+              <path d="M540 548 l17 -6 10 10 -14 8 z"/>
+            </g>
+          </g>
+
+          <!-- ---------- la chambre magmatique ---------- -->
+          <g id="c-chambre" class="zone" tabindex="0" role="button">
+            <!-- la chaleur qui cuit la roche autour -->
+            <ellipse cx="450" cy="444" rx="252" ry="150" fill="url(#grad-c-chaleur)"/>
+            <!-- la poche : sombre là où le magma n'est pas -->
+            <path d="M300 428 C296 392 322 368 362 366 C396 356 436 356 470 364 C520 354 592 372 600 420 C610 466 578 512 520 522 C470 532 410 530 366 518 C318 504 302 468 300 428 Z"
+                  fill="url(#grad-c-vide)"/>
+            <!-- la voûte de la poche, chauffée par le magma en dessous -->
+            <path d="M312 414 C316 386 344 370 380 370 C412 362 452 362 484 370 C528 362 588 380 594 418"
+                  fill="none" stroke="#ff8a42" stroke-width="9" opacity=".22" stroke-linecap="round"/>
+            <!-- la paroi de roche autour de la poche -->
+            <path d="M300 428 C296 392 322 368 362 366 C396 356 436 356 470 364 C520 354 592 372 600 420 C610 466 578 512 520 522 C470 532 410 530 366 518 C318 504 302 468 300 428 Z"
+                  fill="none" stroke="#6b5b73" stroke-width="7"/>
+            <path d="M300 428 C296 392 322 368 362 366 C396 356 436 356 470 364 C520 354 592 372 600 420"
+                  fill="none" stroke="#9b89a4" stroke-width="2.6" opacity=".5" stroke-linecap="round"/>
+            <!-- la lueur du magma qui descend de la cheminée -->
+            <ellipse cx="450" cy="404" rx="46" ry="52" fill="url(#grad-c-chaleur)" opacity=".8"/>
+            <!-- petites fissures qui montent de la poche vers la roche -->
+            <g fill="none" stroke="#ff8a42" stroke-width="2.2" opacity=".4" stroke-linecap="round">
+              <path d="M356 366 C348 356 342 350 334 344"/>
+              <path d="M528 362 C536 354 544 350 552 346"/>
+              <path d="M596 404 C610 400 620 398 630 398"/>
+              <path d="M302 414 C290 412 280 412 270 414"/>
+            </g>
+          </g>
+
+          <!-- ---------- le magma de la chambre (niveau piloté) ---------- -->
+          <g id="c-magma" class="zone" tabindex="0" role="button" clip-path="url(#clip-c-chambre)">
+            <g id="c-magma-niveau" transform="translate(0 0)">
+              <!-- le corps descend bien plus bas que la poche : quand le niveau
+                   monte (translateY négatif), le fond reste rempli -->
+              <path d="M282 446 C330 438 382 452 434 445 C486 438 552 452 618 442 L618 620 L282 620 Z"
+                    fill="url(#grad-c-magma)"/>
+              <!-- la surface : un liseré clair qui accroche la lumière -->
+              <path d="M282 446 C330 438 382 452 434 445 C486 438 552 452 618 442"
+                    fill="none" stroke="#fff6c8" stroke-width="4" opacity=".85" stroke-linecap="round"/>
+              <!-- veines claires dans le magma -->
+              <g fill="none" stroke="#fff0b0" stroke-width="3" opacity=".3" stroke-linecap="round">
+                <path d="M330 480 C370 470 410 486 452 476"/>
+                <path d="M400 512 C440 502 490 516 540 506"/>
+                <path d="M478 486 C512 478 546 488 578 480"/>
+              </g>
+              <!-- les bulles qui remontent -->
+              <g id="c-bulles" fill="#fff6c8">
+                <circle class="bulle" cx="368" cy="508" r="7" opacity=".8"/>
+                <circle class="bulle" cx="424" cy="518" r="5.5" opacity=".75"/>
+                <circle class="bulle" cx="470" cy="500" r="8.5" opacity=".8"/>
+                <circle class="bulle" cx="522" cy="514" r="6" opacity=".75"/>
+                <circle class="bulle" cx="562" cy="496" r="7.5" opacity=".7"/>
+              </g>
+            </g>
+          </g>
+
+          <!-- ---------- l'intérieur du cône : les strates ---------- -->
+          <g clip-path="url(#clip-c-cone)">
+            <!-- le vieux cœur du volcan, sous les strates -->
+            <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 L720 346 L180 346 Z"
+                  fill="#453350"/>
+
+            <!-- 3 épaisses coulées de lave refroidie (sombres) -->
+            <g id="c-strates-lave" class="zone" tabindex="0" role="button"
+               fill="url(#grad-c-strate-lave)" fill-rule="evenodd">
+              <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 L720 346 L180 346 Z M207 340 C261 320.2 343.8 262.6 412.2 138.4 Q450 165.4 487.8 138.4 C556.2 262.6 639 320.2 693 340 L693 346 L207 346 Z"/>
+              <path d="M224.6 340 C274.6 321.6 351.5 268.2 414.9 153 Q450 178 485.1 153 C548.5 268.2 625.4 321.6 675.5 340 L675.5 346 L224.6 346 Z M265 340 C306.1 324.9 369.2 281.1 421.2 186.6 Q450 207.1 478.8 186.6 C530.8 281.1 593.9 324.9 635 340 L635 346 L265 346 Z"/>
+              <path d="M282.6 340 C319.8 326.4 376.8 286.7 424 201.1 Q450 219.7 476 201.1 C523.2 286.7 580.2 326.4 617.4 340 L617.4 346 L282.6 346 Z M325.8 340 C353.4 329.9 395.7 300.4 430.7 237 Q450 250.8 469.3 237 C504.3 300.4 546.6 329.9 574.2 340 L574.2 346 L325.8 346 Z"/>
+            </g>
+
+            <!-- 3 lits de cendres (clairs et plus minces) : ils alternent avec les laves -->
+            <g id="c-strates-cendres" class="zone" tabindex="0" role="button"
+               fill="url(#grad-c-strate-cendre)" fill-rule="evenodd">
+              <path d="M207 340 C261 320.2 343.8 262.6 412.2 138.4 Q450 165.4 487.8 138.4 C556.2 262.6 639 320.2 693 340 L693 346 L207 346 Z M224.6 340 C274.6 321.6 351.5 268.2 414.9 153 Q450 178 485.1 153 C548.5 268.2 625.4 321.6 675.5 340 L675.5 346 L224.6 346 Z"/>
+              <path d="M265 340 C306.1 324.9 369.2 281.1 421.2 186.6 Q450 207.1 478.8 186.6 C530.8 281.1 593.9 324.9 635 340 L635 346 L265 346 Z M282.6 340 C319.8 326.4 376.8 286.7 424 201.1 Q450 219.7 476 201.1 C523.2 286.7 580.2 326.4 617.4 340 L617.4 346 L282.6 346 Z"/>
+              <path d="M325.8 340 C353.4 329.9 395.7 300.4 430.7 237 Q450 250.8 469.3 237 C504.3 300.4 546.6 329.9 574.2 340 L574.2 346 L325.8 346 Z M343.4 340 C367.1 331.3 403.4 306 433.4 251.5 Q450 263.4 466.6 251.5 C496.6 306 533 331.3 556.6 340 L556.6 346 L343.4 346 Z"/>
+            </g>
+
+            <!-- lignes de contact entre les couches -->
+            <g fill="none" stroke="#2f2335" stroke-width="1.3" opacity=".4">
+              <path d="M207 340 C261 320.2 343.8 262.6 412.2 138.4 Q450 165.4 487.8 138.4 C556.2 262.6 639 320.2 693 340"/>
+              <path d="M224.6 340 C274.6 321.6 351.5 268.2 414.9 153 Q450 178 485.1 153 C548.5 268.2 625.4 321.6 675.5 340"/>
+              <path d="M265 340 C306.1 324.9 369.2 281.1 421.2 186.6 Q450 207.1 478.8 186.6 C530.8 281.1 593.9 324.9 635 340"/>
+              <path d="M282.6 340 C319.8 326.4 376.8 286.7 424 201.1 Q450 219.7 476 201.1 C523.2 286.7 580.2 326.4 617.4 340"/>
+              <path d="M325.8 340 C353.4 329.9 395.7 300.4 430.7 237 Q450 250.8 469.3 237 C504.3 300.4 546.6 329.9 574.2 340"/>
+              <path d="M343.4 340 C367.1 331.3 403.4 306 433.4 251.5 Q450 263.4 466.6 251.5 C496.6 306 533 331.3 556.6 340"/>
+            </g>
+          </g>
+
+          <!-- ---------- la croûte : le flanc vu de l'extérieur ---------- -->
+          <g id="c-flanc" class="zone" tabindex="0" role="button">
+            <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 L720 346 L180 346 Z M194.9 340 C251.6 319.2 338.5 258.7 410.3 128.3 Q450 156.7 489.7 128.3 C561.5 258.7 648.5 319.2 705.1 340 L705.1 346 L194.9 346 Z"
+                  fill="url(#grad-c-flanc)" fill-rule="evenodd" clip-path="url(#clip-c-cone)"/>
+            <!-- flanc droit éclairé / flanc gauche à l'ombre, comme dehors -->
+            <path d="M492 116 C568 254 660 318 720 340 L705.1 340 C648.5 319.2 561.5 258.7 489.7 128.3 Z" fill="#e2d2df" opacity=".35"/>
+            <path d="M408 116 C332 254 240 318 180 340 L194.9 340 C251.6 319.2 338.5 258.7 410.3 128.3 Z" fill="#2c2440" opacity=".22"/>
+          </g>
+
+          <!-- ---------- le petit cône adventif, au bas du flanc droit ---------- -->
+          <g id="c-cone-adventif" class="zone" tabindex="0" role="button">
+            <path d="M674 317.6 C690 302 706 288 716 279 L722 285 L728 279 C740 298 758 324 770 340 L720 340 C708 336 692 327.6 674 317.6 Z"
+                  fill="url(#grad-c-adventif)"/>
+            <!-- son petit cratère -->
+            <path d="M716 279 L722 285 L728 279 C725 277.6 719 277.6 716 279 Z" fill="#241a2e"/>
+            <!-- liseré clair côté lumière, ombre côté droit -->
+            <path d="M674 317.6 C690 302 706 288 716 279" fill="none" stroke="#d0bed0" stroke-width="2.4" opacity=".45" stroke-linecap="round"/>
+            <path d="M728 279 C740 298 758 324 770 340" fill="none" stroke="#3a2f46" stroke-width="2" opacity=".35" stroke-linecap="round"/>
+            <!-- il est posé sur l'herbe -->
+            <ellipse cx="745" cy="340" rx="30" ry="4" fill="#2f2438" opacity=".28"/>
+          </g>
+
+          <!-- ---------- la cheminée secondaire : de la chambre au petit cône ---------- -->
+          <g id="c-cheminee2" class="zone" tabindex="0" role="button"
+             fill="none" stroke-linecap="round" clip-path="url(#clip-c-dike)">
+            <path d="M568 378 C620 372 660 372 692 366 C706 362 714 350 716 330 C718 314 719 300 720 291" stroke="#b0a0b4" stroke-width="20" opacity=".9"/>
+            <path d="M568 378 C620 372 660 372 692 366 C706 362 714 350 716 330 C718 314 719 300 720 291" stroke="url(#grad-c-vide)" stroke-width="13"/>
+            <!-- une lueur au départ : le magma de la chambre n'est pas loin -->
+            <path d="M570 377 C600 374 622 372 640 371" stroke="#ff8a42" stroke-width="8" opacity=".4"/>
+          </g>
+
+          <!-- ---------- la cheminée principale ---------- -->
+          <g id="c-cheminee" class="zone" tabindex="0" role="button">
+            <!-- parois nettes : une gaine de roche claire de chaque côté -->
+            <path d="M430 194 L470 194 L470 366 L430 366 Z" fill="#a492aa" opacity=".85"/>
+            <path d="M437 194 L463 194 L463 366 L437 366 Z" fill="url(#grad-c-vide)"/>
+            <path d="M463 196 L463 358" fill="none" stroke="#f0e3ee" stroke-width="1.8" opacity=".55"/>
+            <path d="M437 196 L437 358" fill="none" stroke="#241c30" stroke-width="1.8" opacity=".5"/>
+            <!-- aspérités de la paroi -->
+            <g fill="#6b5b73" opacity=".5">
+              <path d="M437 232 l7 5 -7 5 z"/>
+              <path d="M463 268 l-8 5 8 6 z"/>
+              <path d="M437 306 l6 5 -6 5 z"/>
+              <path d="M463 344 l-7 5 7 5 z"/>
+            </g>
+            <!-- la cheminée perce la voûte de la chambre -->
+            <g fill="#6b5b73">
+              <path d="M437 352 C426 356 418 362 412 370 L437 370 Z"/>
+              <path d="M463 352 C474 356 482 362 488 370 L463 370 Z"/>
+            </g>
+          </g>
+
+          <!-- ---------- la colonne de magma dans la cheminée ----------
+               dessinée « cheminée pleine » puis descendue de 120 px :
+               la tâche 6 pilotera translateY de 120 (endormi) à 0 (éruption) -->
+          <g clip-path="url(#clip-c-cheminee)">
+            <g id="c-magma-colonne" transform="translate(0 120)">
+              <path d="M437 197 C437 185 463 185 463 197 L463 470 L437 470 Z" fill="url(#grad-c-colonne)"/>
+              <ellipse cx="450" cy="192" rx="19" ry="9" fill="#fff6c8" opacity=".45"/>
+              <path d="M443 208 C441 232 442 256 445 280" fill="none" stroke="#fff0b0" stroke-width="2.4" opacity=".35" stroke-linecap="round"/>
+            </g>
+          </g>
+
+          <!-- ---------- le cratère en coupe (l'entonnoir) ---------- -->
+          <g id="c-cratere" class="zone" tabindex="0" role="button">
+            <!-- la paroi de roche de l'entonnoir, dans le prolongement de la cheminée -->
+            <path d="M409 119 C416 150 430 166 430 198 L470 198 C470 166 484 150 491 119 Z" fill="#a492aa" opacity=".85"/>
+            <!-- l'entonnoir vide -->
+            <path d="M409 119 C416 150 434 168 437 196 L463 196 C466 168 484 150 491 119 Z" fill="url(#grad-c-vide)"/>
+            <path d="M491 119 C484 150 466 168 463 196" fill="none" stroke="#cbb9cc" stroke-width="2.6" opacity=".5" stroke-linecap="round"/>
+            <path d="M409 119 C416 150 434 168 437 196" fill="none" stroke="#241c30" stroke-width="2.6" opacity=".6" stroke-linecap="round"/>
+            <!-- blocs tombés sur les parois de l'entonnoir -->
+            <g fill="#7a6885" opacity=".55">
+              <path d="M418 134 l11 4 -3 9 -10 -5 z"/>
+              <path d="M480 140 l10 -5 3 9 -10 5 z"/>
+              <path d="M429 166 l8 3 -2 8 -8 -4 z"/>
+              <path d="M470 172 l8 -4 2 8 -8 4 z"/>
+            </g>
+            <!-- lèvre arrière : reprise à l'identique de la vue Dehors -->
+            <path d="M405 122 C405 111 425 104 450 104 C475 104 495 111 495 122 C495 114 476 110 450 110 C424 110 405 114 405 122 Z" fill="#dbcbdb"/>
+            <!-- petits blocs sur la lèvre, aux mêmes places que dehors -->
+            <g fill="#c9b7c9">
+              <path d="M414 113 l8 -6 6 6 z"/>
+              <path d="M440 106 l7 -6 7 6 z"/>
+              <path d="M468 108 l7 -6 6 6 z"/>
+              <path d="M485 118 l6 -5 5 6 z"/>
+            </g>
+          </g>
+
+          <!-- ---------- le bouchon de pierre (visible quand le volcan dort) ---------- -->
+          <g id="c-bouchon" class="zone" tabindex="0" role="button" opacity="1">
+            <path d="M432 206 C436 197 464 196 468 206 C472 220 471 236 466 246 C456 251 444 251 434 246 C429 236 428 220 432 206 Z"
+                  fill="url(#grad-c-bouchon)"/>
+            <path d="M440 201 L453 205 L448 220 L437 213 Z" fill="#c8b6c6" opacity=".5"/>
+            <path d="M456 224 L466 228 L463 242 L453 238 Z" fill="#3f3350" opacity=".45"/>
+            <g fill="none" stroke="#2e2340" stroke-width="1.4" opacity=".5" stroke-linecap="round">
+              <path d="M443 203 C446 215 444 231 447 246"/>
+              <path d="M457 201 C454 213 459 229 456 245"/>
+            </g>
+            <!-- il est coincé dans la cheminée : petite ombre de chaque côté -->
+            <g fill="#1e1529" opacity=".45">
+              <path d="M437 208 C433 218 433 234 437 244 L432 240 C430 228 430 216 433 207 Z"/>
+              <path d="M463 208 C467 218 467 234 463 244 L468 240 C470 228 470 216 467 207 Z"/>
+            </g>
+          </g>
+
+          <!-- ================= L'ÉRUPTION (invisible au repos) ================= -->
+
+          <!-- ---------- la coulée sur le flanc gauche ---------- -->
+          <g id="c-coulee" class="zone" tabindex="0" role="button" opacity="0">
+            <path d="M410 124 C384 166 330 236 290 276 C266 300 234 322 206 336 Q222 348 244 340 C272 322 300 298 324 274 C362 236 414 168 434 130 Z"
+                  fill="url(#grad-c-coulee)"/>
+            <path d="M418 132 C394 172 342 238 304 276 C282 298 254 318 230 332" fill="none" stroke="#fff3c4" stroke-width="6" opacity=".5" stroke-linecap="round"/>
+            <!-- le front de la coulée, arrondi -->
+            <path d="M206 336 C192 340 190 348 202 350 C220 352 238 348 244 340 C230 344 216 342 206 336 Z" fill="#ff7a3c"/>
+            <ellipse cx="216" cy="343" rx="13" ry="4.5" fill="#fff0b0" opacity=".6"/>
+          </g>
+
+          <!-- ---------- la fontaine de lave au cratère ---------- -->
+          <g id="c-fontaine" class="zone" tabindex="0" role="button" opacity="0">
+            <ellipse cx="450" cy="116" rx="90" ry="34" fill="url(#grad-c-chaleur)"/>
+            <!-- l'entonnoir plein de magma -->
+            <path d="M409 119 C416 150 434 168 437 196 L463 196 C466 168 484 150 491 119 Z" fill="url(#grad-c-colonne)"/>
+            <!-- le jet -->
+            <path d="M430 124 C424 84 434 52 450 24 C466 52 476 84 470 124 Z" fill="url(#grad-c-fontaine)"/>
+            <path d="M441 122 C437 92 444 64 450 42 C456 64 463 92 459 122 Z" fill="#fff8dc" opacity=".75"/>
+            <!-- gouttes qui retombent -->
+            <g fill="#ffcf7a">
+              <ellipse cx="406" cy="66" rx="5" ry="7" transform="rotate(-24 406 66)"/>
+              <ellipse cx="494" cy="72" rx="4.5" ry="6.5" transform="rotate(22 494 72)"/>
+              <ellipse cx="418" cy="40" rx="4" ry="6" transform="rotate(-16 418 40)"/>
+              <ellipse cx="482" cy="46" rx="4" ry="6" transform="rotate(18 482 46)"/>
+            </g>
+          </g>
+
+          <!-- ---------- les bombes volcaniques (fuseaux) ---------- -->
+          <g id="c-bombes" class="zone" tabindex="0" role="button" opacity="0">
+            <g fill="none" stroke="url(#grad-c-coulee)" stroke-linecap="round" opacity=".45">
+              <path d="M430 112 C406 92 386 74 372 62" stroke-width="4.2"/>
+              <path d="M472 112 C500 90 526 70 548 58" stroke-width="4.6"/>
+              <path d="M442 108 C430 80 418 48 412 26" stroke-width="3.6"/>
+              <path d="M460 108 C470 80 484 50 492 30" stroke-width="3.2"/>
+              <path d="M424 118 C390 104 348 98 312 96" stroke-width="3.4"/>
+            </g>
+            <use href="#c-bombe" fill="url(#grad-c-bombe)" transform="translate(368 60) rotate(-40) scale(1.2)"/>
+            <use href="#c-bombe" fill="url(#grad-c-bombe)" transform="translate(552 56) rotate(36) scale(1.3)"/>
+            <use href="#c-bombe" fill="url(#grad-c-bombe)" transform="translate(410 24) rotate(-72) scale(1.05)"/>
+            <use href="#c-bombe" fill="url(#grad-c-bombe)" transform="translate(494 26) rotate(66) scale(1)"/>
+            <use href="#c-bombe" fill="url(#grad-c-bombe)" transform="translate(306 94) rotate(-16) scale(1.15)"/>
+          </g>
+
+          <!-- ---------- le panache en chou-fleur ---------- -->
+          <g id="c-panache" class="zone" tabindex="0" role="button" opacity="0" fill="url(#grad-c-panache)">
+            <circle cx="450" cy="92" r="21"/>
+            <circle cx="418" cy="74" r="25"/>
+            <circle cx="484" cy="72" r="25"/>
+            <circle cx="450" cy="52" r="34"/>
+            <circle cx="392" cy="46" r="25"/>
+            <circle cx="510" cy="44" r="26"/>
+            <circle cx="424" cy="20" r="24"/>
+            <circle cx="478" cy="18" r="24"/>
+            <circle cx="450" cy="8" r="18"/>
+            <circle cx="374" cy="32" r="17"/>
+            <circle cx="528" cy="30" r="18"/>
+            <g fill="#efeaf4" opacity=".5">
+              <circle cx="432" cy="44" r="15"/>
+              <circle cx="472" cy="40" r="12"/>
+              <circle cx="406" cy="60" r="11"/>
+            </g>
           </g>
 
         </g>
