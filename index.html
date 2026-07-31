@@ -193,10 +193,10 @@ svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margi
 }
 .pill .em{font-size:1.3em;line-height:1}
 .pill:hover{transform:translateX(3px)}
-.pill[data-cut="0"]{
-  background:color-mix(in srgb, var(--c-dehors) 28%, transparent);
-  border-color:var(--c-dehors);
-  box-shadow:0 0 0 4px color-mix(in srgb, var(--c-dehors) 16%, transparent);
+.pill.active{
+  background:color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 /* ------------------------------- sliders (gros pouces) */
@@ -234,6 +234,11 @@ input[type=range]:focus-visible{outline:3px solid var(--braise);outline-offset:6
 #cut{width:200px;height:38px;transform:rotate(90deg)}
 #cut::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--c-dehors),var(--c-dedans) 50%,var(--c-prof))}
 #cut::-moz-range-track{background:linear-gradient(90deg,var(--c-dehors),var(--c-dedans) 50%,var(--c-prof))}
+
+/* accent de couleur par vue active (coupe), consommé par .pill.active et .info::after */
+body[data-vue="0"]{--accent:var(--c-dehors)}
+body[data-vue="1"]{--accent:var(--c-dedans)}
+body[data-vue="2"]{--accent:var(--c-prof)}
 
 /* ------------------------------- carte info */
 .info{position:relative;overflow:hidden;min-height:170px;display:flex;flex-direction:column}
@@ -1724,6 +1729,81 @@ footer{
 </div>
 
 <footer>Fait avec ❤️ pour Raphaël</footer>
+
+<script>
+/* ==========================================================================
+   DANS MON VOLCAN — script principal
+   Sections :
+     5) Curseur COUPE (setCut)      — fondu entre les 3 vues
+     6) Curseur TEMPS (setTime)     — à venir
+     7) Zones cliquables + INFO     — à venir
+     8) Voix (off par défaut)       — à venir
+     9) Loupe                       — à venir
+    10) Mini-jeu                    — à venir
+   ========================================================================== */
+
+/* ---------- utilitaires partagés ---------- */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+/* ==========================================================================
+   5) CURSEUR COUPE — fondu continu Dehors → Dedans → Profondeurs
+   Produit : setCut(c), la variable `cut` (0..2), currentView() → 0|1|2.
+   ========================================================================== */
+let cut = 0;
+const VUES = ["#g-dehors","#g-dedans","#g-prof"];
+function setCut(c){
+  cut = clamp(c, 0, 2);
+  VUES.forEach((sel,i) => {
+    const g = $(sel), op = clamp(1 - Math.abs(cut - i), 0, 1);
+    g.style.opacity = op;
+    g.style.pointerEvents = (Math.round(cut) === i) ? "auto" : "none";
+  });
+  $("#g-ciel").style.opacity = clamp(2 - cut, 0, 1);   // le ciel partagé s'efface vers les profondeurs
+  $("#g-ciel").style.pointerEvents = (cut < 1.5) ? "auto" : "none"; // le nuage cliquable (#d-nuage) ne réagit que si le ciel est visible
+  $("#cut").value = Math.round(cut * 100);
+  $$(".pill").forEach(p => p.classList.toggle("active", +p.dataset.cut === Math.round(cut)));
+  document.body.dataset.vue = Math.round(cut);          // accent de couleur par vue via CSS
+}
+const currentView = () => Math.round(cut);
+$("#cut").addEventListener("input", e => setCut(e.target.value / 100));
+$$(".pill").forEach(p => p.addEventListener("click", () => glideCut(+p.dataset.cut)));
+function glideCut(target){                              // glissé doux ~500ms
+  const from = cut, t0 = performance.now();
+  (function step(now){
+    const k = clamp((now - t0) / 500, 0, 1), e = k*(2-k); // easeOut
+    setCut(from + (target - from) * e);
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+addEventListener("keydown", e => {
+  if (e.key === "ArrowDown"){ e.preventDefault(); glideCut(clamp(Math.round(cut)+1,0,2)); }
+  if (e.key === "ArrowUp"){ e.preventDefault(); glideCut(clamp(Math.round(cut)-1,0,2)); }
+});
+
+/* ==========================================================================
+   6) CURSEUR TEMPS (setTime) — à implémenter (Task 6)
+   ========================================================================== */
+
+/* ==========================================================================
+   7) ZONES CLIQUABLES + CARTE INFO — à implémenter (Task 7)
+   ========================================================================== */
+
+/* ==========================================================================
+   8) VOIX (off par défaut) — à implémenter (Task 8)
+   ========================================================================== */
+
+/* ==========================================================================
+   9) LOUPE — à implémenter (Task 9)
+   ========================================================================== */
+
+/* ==========================================================================
+   10) MINI-JEU — à implémenter (Task 10)
+   ========================================================================== */
+
+/* ---------- état initial : le paysage (Dehors), pas la coupe ---------- */
+setCut(0);
+</script>
 
 </body>
 </html>
