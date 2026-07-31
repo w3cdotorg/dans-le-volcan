@@ -171,7 +171,7 @@ svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margi
 }
 .moment .em{font-size:clamp(1.2rem,3vw,1.6rem);line-height:1;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
 .moment:hover{transform:translateY(-3px)}
-.moment[data-time="0"]{
+.moment.active{
   background:color-mix(in srgb, var(--lave) 28%, transparent);
   border-color:var(--lave);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--lave) 16%, transparent);
@@ -385,6 +385,22 @@ footer{
   30%{opacity:.75}
   100%{opacity:0;transform:translate(-34px,-96px) scale(1.5)}
 }
+
+/* ------------------------------- curseur temps (Task 6)
+   Séisme du réveil : tout le volcan tremble légèrement. Coupé par la
+   règle reduced-motion ci-dessous (elle cible *, donc #volcan aussi). */
+.tremble #volcan{animation:tremble .18s linear infinite}
+@keyframes tremble{
+  25%{transform:translate(1.5px,-1px)}
+  75%{transform:translate(-1.5px,1px)}
+}
+/* remontée accélérée du magma en profondeur pendant l'éruption : on ne
+   change qu'une seule variable, --flux-d (cf. #p-flux plus haut). La
+   règle sur #p-flux lui-même a une spécificité (1 ID) trop faible face
+   à sa propre déclaration ; on cible donc aussi le descendant directement
+   (2 ID) pour être certain de l'emporter. */
+#g-prof.flux-fort{--flux-d:.9s}
+#g-prof.flux-fort #p-flux{--flux-d:.9s}
 
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
 </style>
@@ -708,6 +724,12 @@ footer{
             <path d="M468 126 C480 166 502 208 528 244 C550 274 576 300 594 324 Q590 338 566 336 C544 312 518 284 496 252 C472 216 454 174 448 128 Z"/>
             <path d="M424 128 C410 164 390 200 366 232 C346 258 328 282 314 306 Q322 320 344 316 C360 294 378 270 396 244 C418 210 436 176 446 132 Z"/>
           </g>
+          <!-- rougeoiement du ciel (Task 6) : lueur douce centrée sur le cratère,
+               son opacité est pilotée en JS via --rougeoiement -->
+          <radialGradient id="grad-t-rouge" cx=".5" cy=".62" r=".62" gradientUnits="objectBoundingBox">
+            <stop offset="0" stop-color="#ff5a1f" stop-opacity=".65"/>
+            <stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/>
+          </radialGradient>
         </defs>
 
         <!-- ==================================================================
@@ -748,6 +770,10 @@ footer{
             <ellipse cx="32" cy="4" rx="24" ry="13"/>
             <rect x="-58" y="2" width="112" height="14" rx="7"/>
           </g>
+
+          <!-- rougeoiement de l'éruption : dernier enfant, posé au-dessus du ciel -->
+          <rect class="rouge" x="0" y="0" width="900" height="560" fill="url(#grad-t-rouge)"
+                pointer-events="none" style="opacity:var(--rougeoiement,0)"/>
         </g>
 
         <!-- ==================================================================
@@ -1798,8 +1824,54 @@ addEventListener("keydown", e => {
 });
 
 /* ==========================================================================
-   6) CURSEUR TEMPS (setTime) — à implémenter (Task 6)
+   6) CURSEUR TEMPS — l'éruption interpolée sur les 3 vues
+   Produit : setTime(t), la variable `time` (0..4), lerpArr(arr,t),
+   currentPhase() → 0..4 (0 Endormi, 1 Réveil, 2 Éruption, 3 Coulées, 4 Repos).
    ========================================================================== */
+let time = 0;
+function lerpArr(arr, t){            // interpolation linéaire par morceaux sur [0..4]
+  const i = clamp(Math.floor(t), 0, arr.length - 2), f = t - i;
+  return arr[i] + (arr[i+1] - arr[i]) * f;
+}
+// Tables : 5 valeurs = [endormi, réveil, éruption, coulées, repos]
+const OPACITES = [
+  ["#d-fumee",          [ .8,  .3,   0,   0,  .5]],
+  ["#d-panache-ext",    [  0,  .2,   1,  .35,  0]],
+  ["#d-lueur-cratere",  [  0,  .5,   1,  .6,   0]],
+  ["#d-coulees-ext",    [  0,   0,  .9,   1,   0]],
+  ["#d-coulees-noires", [  0,   0,   0,  .2,   1]],
+  ["#d-pousses",        [  0,   0,   0,   0,   1]],
+  ["#d-oiseaux",        [  1,  .4,   0,   0,  .8]],   // les oiseaux fuient
+  ["#c-panache",        [  0,  .15,  1,  .35,  0]],
+  ["#c-bombes",         [  0,   0,   1,  .25,  0]],
+  ["#c-fontaine",       [  0,   0,   1,  .4,   0]],
+  ["#c-coulee",         [  0,   0,  .9,   1,  .15]],
+  ["#c-bouchon",        [  1,  .25,  0,   0,  .8]],
+  ["#p-seisme",         [  0,   1,  .7,  .2,   0]],
+];
+const MAGMA_Y = [120, 45, 0, 30, 90];       // translateY de #c-magma-colonne (0 = cheminée pleine)
+const CHAMBRE_Y = [0, 8, 26, 14, 4];        // #c-magma-niveau descend pendant l'éruption
+const ROUGE = [0, .12, .75, .4, .05];       // lueur du ciel, appliquée via --rougeoiement
+function setTime(t){
+  time = clamp(t, 0, 4);
+  OPACITES.forEach(([sel, arr]) => { const el = $(sel); if (el) el.style.opacity = lerpArr(arr, time); });
+  $("#c-magma-colonne").style.transform = `translateY(${lerpArr(MAGMA_Y, time)}px)`;
+  $("#c-magma-niveau").style.transform  = `translateY(${lerpArr(CHAMBRE_Y, time)}px)`;
+  document.documentElement.style.setProperty("--rougeoiement", lerpArr(ROUGE, time));
+  document.body.classList.toggle("tremble", time > .5 && time < 1.6);   // séisme du réveil
+  $("#g-prof").classList.toggle("flux-fort", time > 1.4 && time < 2.8); // remontée accélérée
+  $("#time").value = Math.round(time * 100);
+  $$(".moment").forEach(m => m.classList.toggle("active", +m.dataset.time === Math.round(time)));
+}
+const currentPhase = () => Math.round(time);
+const glideTime = makeGlide(setTime, () => time, 600);
+$("#time").addEventListener("input", e => { glideTime.cancel(); setTime(e.target.value / 100); });
+$$(".moment").forEach(m => m.addEventListener("click", () => glideTime(+m.dataset.time)));
+addEventListener("keydown", e => {
+  if (e.key === "ArrowRight"){ e.preventDefault(); glideTime(clamp(Math.round(time)+1,0,4)); }
+  if (e.key === "ArrowLeft"){ e.preventDefault(); glideTime(clamp(Math.round(time)-1,0,4)); }
+});
+setTime(0);
 
 /* ==========================================================================
    7) ZONES CLIQUABLES + CARTE INFO — à implémenter (Task 7)
