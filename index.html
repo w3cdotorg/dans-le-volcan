@@ -402,6 +402,42 @@ footer{
 #g-prof.flux-fort{--flux-d:.9s}
 #g-prof.flux-fort #p-flux{--flux-d:.9s}
 
+/* ------------------------------- zones cliquables + carte info (Task 7)
+   .selected utilise un filter:drop-shadow (pas un stroke) : certaines zones
+   sont sous clip-path (c-magma, les strates) ou remplies par <use>, et un
+   drop-shadow appliqué à un élément clippé suit fidèlement la forme visible
+   après découpe — un stroke serait lui-même coupé net par le clip. Comme ce
+   n'est pas une animation, .selected reste visible même en reduced-motion. */
+.zone{cursor:pointer}
+.zone.selected{filter:drop-shadow(0 0 3px var(--cream)) drop-shadow(0 0 9px var(--cream))}
+
+/* « Montrer les zones » : 3 pulsations en 3.5s, une seule animation (pas de
+   iteration-count) pour rester alignée sur le setTimeout JS qui retire la
+   classe côté body à 3500ms. */
+@keyframes pulse-zone{
+  0%,100%{filter:drop-shadow(0 0 0 transparent)}
+  16.6%{filter:drop-shadow(0 0 9px var(--cream))}
+  33.3%{filter:drop-shadow(0 0 0 transparent)}
+  50%{filter:drop-shadow(0 0 9px var(--cream))}
+  66.6%{filter:drop-shadow(0 0 0 transparent)}
+  83.3%{filter:drop-shadow(0 0 9px var(--cream))}
+}
+.show-zones .zone{animation:pulse-zone 3.5s ease-in-out}
+
+/* étiquette flottante SVG : petit label repositionné en JS près de la zone
+   cliquée, en plus de la carte #info. pointer-events:none : elle ne doit
+   jamais intercepter de clic (ni gêner le futur mini-jeu de la Task 10). */
+#label-flottant{opacity:0;pointer-events:none;transition:opacity .18s}
+#label-bg{fill:rgba(22,11,38,.92);stroke:rgba(255,244,226,.45);stroke-width:1.5}
+#label-text{font-family:var(--font-display);font-weight:600;font-size:16px;fill:var(--cream);text-anchor:middle;dominant-baseline:middle}
+
+/* carte info : petite pulsation à chaque nouvelle sélection */
+.info{transition:box-shadow .3s}
+.info.open{box-shadow:0 22px 50px -28px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.16), 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent)}
+.info .big{display:inline-block}
+.info.flash .big{animation:info-pop .3s ease}
+@keyframes info-pop{0%{transform:scale(.6)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
 </style>
 </head>
@@ -1705,6 +1741,16 @@ footer{
           </g>
 
         </g>
+
+        <!-- ============ étiquette flottante (Task 7) ============
+             Suit la zone cliquée. Repositionnée en JS via getBoundingClientRect +
+             getScreenCTM (fonctionne même pour les zones sous clip-path, ex.
+             c-magma, c-strates-lave : le rect rendu tient compte de la découpe).
+             pointer-events:none : elle ne doit jamais intercepter de clic. -->
+        <g id="label-flottant" aria-hidden="true">
+          <rect id="label-bg" x="0" y="0" width="0" height="0" rx="12" ry="12"/>
+          <text id="label-text" x="0" y="0"></text>
+        </g>
       </svg>
     </div>
 
@@ -1737,7 +1783,7 @@ footer{
     <div class="card info" id="info">
       <div class="big" id="infoEmoji">🌋</div>
       <h2 id="infoTitle">Touche le volcan&nbsp;!</h2>
-      <p id="infoText">Clique sur une partie du volcan pour découvrir ce qu'elle cache.</p>
+      <p id="infoText">Appuie sur ce que tu veux découvrir, ou tourne les deux gros boutons.</p>
     </div>
 
     <div class="card tools">
@@ -1874,8 +1920,120 @@ addEventListener("keydown", e => {
 setTime(0);
 
 /* ==========================================================================
-   7) ZONES CLIQUABLES + CARTE INFO — à implémenter (Task 7)
+   7) ZONES CLIQUABLES + CARTE INFO
+   Produit : INFO (35 entrées), showInfo(id), speakText(id) → string,
+   bouton #zones (pulsation 3.5s), étiquette flottante SVG.
    ========================================================================== */
+let say = () => {};                       // remplacée par la vraie TTS en Task 8
+let currentId = null;
+
+const INFO = {
+  // ---- Dehors
+  "d-cone":{n:"Le volcan",em:"🌋",t:"Voici le volcan ! C'est une montagne un peu spéciale : elle s'est construite toute seule, couche après couche, avec la lave de ses éruptions."},
+  "d-cratere":{n:"Le cratère",em:"🕳️",t:"Tout en haut, il y a un grand trou : le cratère. C'est la bouche du volcan, c'est par là que tout sort !"},
+  "d-fumee":{n:"Les fumerolles",em:"💨",t:"Ces petites fumées s'appellent des fumerolles. Elles montrent que le volcan respire, même quand il dort."},
+  "d-foret":{n:"La forêt",em:"🌲",t:"Autour du volcan, la forêt pousse très bien. Les cendres des vieilles éruptions rendent la terre très nourrissante pour les plantes."},
+  "d-village":{n:"Le village",em:"🏡",t:"Des gens habitent tout près, parce que la terre du volcan fait pousser de beaux légumes. Pas de panique : on surveille le volcan jour et nuit."},
+  "d-riviere":{n:"La rivière",em:"💧",t:"La pluie qui tombe sur le volcan devient une rivière fraîche. Elle descend la pente en chantant jusqu'au village."},
+  "d-prairie":{n:"La prairie",em:"🌼",t:"Sur les vieilles laves, des fleurs ont poussé. La nature revient toujours, même après une éruption."},
+  "d-chemin":{n:"Le chemin",em:"🥾",t:"Ce petit chemin monte en zigzag jusqu'au sommet. C'est par là que passent les savants pour aller voir le cratère."},
+  "d-oiseaux":{n:"Les oiseaux",em:"🐦",t:"Les animaux sentent le volcan avant nous ! Quand la terre commence à trembler, les oiseaux s'envolent très loin."},
+  "d-nuage":{n:"Les nuages",em:"☁️",t:"Ceux-là sont des vrais nuages de pluie, tout doux. Ne les confonds pas avec le panache du volcan, qui est plein de cendres !"},
+  "d-ancienne-coulee":{n:"La vieille coulée",em:"🪨",t:"Cette grande langue noire, c'est de la lave d'une ancienne éruption. En refroidissant, elle est devenue de la roche toute dure."},
+  "d-volcanologue":{n:"La volcanologue",em:"👩‍🔬",t:"C'est la savante des volcans ! Avec ses appareils, elle écoute le volcan pour deviner quand il va se réveiller et prévenir le village."},
+  // ---- Dedans
+  "c-cratere":{n:"Le cratère",em:"🕳️",t:"Le cratère, c'est l'entonnoir au sommet du volcan. Pendant l'éruption, le magma jaillit par ici et devient de la lave."},
+  "c-cheminee":{n:"La cheminée",em:"🪈",t:"La cheminée est le grand tuyau du volcan. Elle part de la chambre magmatique et monte jusqu'au cratère : le magma grimpe par là."},
+  "c-cheminee2":{n:"La petite cheminée",em:"🪄",t:"Parfois le magma se faufile par un tuyau de côté. On dit une cheminée secondaire : elle fait un petit volcan sur le flanc du grand."},
+  "c-cone-adventif":{n:"Le petit cône",em:"⛰️",t:"Au bout de la petite cheminée, un mini-volcan a poussé sur le flanc du grand. C'est son petit frère !"},
+  "c-chambre":{n:"La chambre magmatique",em:"🫙",t:"Sous le volcan se cache une énorme poche remplie de roche fondue toute chaude. C'est le réservoir du volcan : la chambre magmatique."},
+  "c-magma":{n:"Le magma",em:"🍯",t:"Le magma, c'est de la roche si chaude qu'elle a fondu, comme du chocolat ! Quand il sort du volcan, il change de nom : on l'appelle la lave."},
+  "c-strates-lave":{n:"Les couches de lave",em:"🥞",t:"Regarde les bandes sombres : chaque éruption a laissé une couche de lave durcie. Le volcan a grandi comme une pile de crêpes !"},
+  "c-strates-cendres":{n:"Les couches de cendres",em:"🍰",t:"Entre les laves, il y a des couches plus claires : ce sont les cendres retombées après les grosses éruptions."},
+  "c-bouchon":{n:"Le bouchon",em:"🧀",t:"Quand le volcan dort longtemps, la lave durcit dans la cheminée et fait un bouchon de pierre. Au réveil, le magma doit pousser très fort pour l'ouvrir !"},
+  "c-flanc":{n:"Le flanc",em:"📐",t:"Le flanc, c'est la pente du volcan. Les coulées de lave glissent dessus, et les couches s'empilent pour le faire grandir."},
+  "c-panache":{n:"Le panache",em:"🌫️",t:"Cet immense nuage gris est plein de cendres et de gaz brûlants. Il peut monter plus haut que les avions !"},
+  "c-bombes":{n:"Les bombes volcaniques",em:"🏉",t:"Le volcan crache des morceaux de lave qui volent ! En tournant dans le ciel, ils prennent une forme de ballon de rugby."},
+  "c-fontaine":{n:"La fontaine de lave",em:"⛲",t:"Au plus fort de l'éruption, la lave jaillit du cratère comme une fontaine de feu. Elle éclabousse tout autour !"},
+  "c-coulee":{n:"La coulée de lave",em:"🔥",t:"La lave descend la pente comme une rivière orange, très lente et très très chaude. Sur son passage, tout brûle."},
+  // ---- Profondeurs
+  "p-croute":{n:"La croûte terrestre",em:"🥖",t:"La croûte, c'est la peau dure de la Terre : nous marchons dessus ! Comparée à toute la Terre, elle est fine comme la coquille d'un œuf."},
+  "p-manteau":{n:"Le manteau",em:"🌡️",t:"Sous la croûte, la roche est si chaude qu'elle devient molle et bouge tout doucement, comme une pâte à gâteau qu'on remue."},
+  "p-plaque-oce":{n:"La plaque de l'océan",em:"🌊",t:"La croûte est découpée en grands morceaux qui flottent : les plaques. Celle-ci porte l'océan sur son dos."},
+  "p-plaque-cont":{n:"La plaque du continent",em:"🏔️",t:"Cette plaque-là porte la terre où nous vivons, avec ses montagnes et notre volcan."},
+  "p-subduction":{n:"La plongée",em:"🛝",t:"Les deux plaques se poussent, et la plaque de l'océan glisse sous l'autre, comme sur un toboggan. Les savants appellent ça la subduction."},
+  "p-fusion":{n:"La naissance du magma",em:"✨",t:"En s'enfonçant, la plaque chauffe tellement que la roche au-dessus se met à fondre. C'est ici que naît le magma !"},
+  "p-remontee":{n:"La remontée",em:"🎈",t:"Le magma est plus léger que la roche autour de lui. Alors il monte, bulle après bulle, jusqu'à la chambre magmatique du volcan."},
+  "p-seisme":{n:"Le tremblement de terre",em:"⚡",t:"Quand les plaques frottent l'une contre l'autre, la terre tremble ! Ces petits séismes annoncent parfois le réveil du volcan."},
+  "p-ocean":{n:"L'océan",em:"🐳",t:"Tout là-bas, c'est la mer. C'est sous elle que commence le grand toboggan des plaques."},
+};
+
+function speakText(id){ const z = INFO[id]; return `${z.n}. ${z.t}`; }
+
+/* Étiquette flottante : repositionnée via getBoundingClientRect + getScreenCTM
+   plutôt que getBBox seul, pour obtenir directement le rectangle VISIBLE dans
+   l'espace du viewBox (donc déjà réduit par un éventuel clip-path), et pour
+   éviter l'ambiguïté du référentiel local de getBBox() face aux <use>/transform.
+   clamp() dans le viewBox 900×560 pour les zones proches des bords. */
+function showLabel(id, el){
+  const z = INFO[id];
+  const svg = $("#volcan"), g = $("#label-flottant"), txt = $("#label-text"), bg = $("#label-bg");
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return;                                   // svg pas encore rendu (peu probable)
+  const inv = ctm.inverse();
+  const r = el.getBoundingClientRect();
+  const p1 = new DOMPoint(r.left, r.top).matrixTransform(inv);
+  const p2 = new DOMPoint(r.right, r.bottom).matrixTransform(inv);
+  const bx = Math.min(p1.x, p2.x), by = Math.min(p1.y, p2.y);
+  const bw = Math.abs(p2.x - p1.x), bh = Math.abs(p2.y - p1.y);
+  txt.textContent = `${z.em} ${z.n}`;
+  const tb = txt.getBBox();
+  const padX = 16, padY = 9;
+  const w = tb.width + padX * 2, h = tb.height + padY * 2;
+  const x = clamp(bx + bw / 2 - w / 2, 6, 900 - 6 - w);
+  const y = clamp(by - h - 12, 6, 560 - 6 - h);
+  bg.setAttribute("x", x); bg.setAttribute("y", y);
+  bg.setAttribute("width", w); bg.setAttribute("height", h);
+  txt.setAttribute("x", x + w / 2); txt.setAttribute("y", y + h / 2);
+  g.style.opacity = 1;
+}
+
+function showInfo(id, el){
+  const z = INFO[id]; if (!z) return;
+  el = el || document.getElementById(id);
+  currentId = id;
+  $("#infoEmoji").textContent = z.em;
+  $("#infoTitle").textContent = z.n;
+  $("#infoText").textContent  = z.t;
+  const info = $("#info");
+  info.classList.add("open");
+  info.classList.remove("flash");
+  void info.offsetWidth;                              // reflow : relance l'animation flash à chaque clic
+  info.classList.add("flash");
+  $$(".zone.selected").forEach(e => e.classList.remove("selected"));
+  el?.classList.add("selected");
+  if (el) showLabel(id, el);
+  say(speakText(id));
+}
+
+function handleZoneActivate(el){
+  // p-seisme, c-panache, c-bombes, c-fontaine, c-coulee restent dans le DOM avec
+  // opacity:0 à certains temps mais interceptent quand même les clics (Task 6 pilote
+  // leur opacité en style inline). Un enfant ne doit pas déclencher l'explication
+  // d'une zone qu'il ne voit pas → on ignore le clic si elle est effectivement
+  // invisible. pointer-events:none statique est volontairement exclu : le mini-jeu
+  // de la Task 10 doit pouvoir cliquer ces zones dès qu'elles redeviennent visibles.
+  if (parseFloat(getComputedStyle(el).opacity) < .05) return;
+  showInfo(el.id, el);
+}
+$$(".zone").forEach(z => {
+  z.addEventListener("click", () => handleZoneActivate(z));
+  z.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); handleZoneActivate(z); } });
+});
+$("#zones").addEventListener("click", () => {
+  document.body.classList.add("show-zones");
+  setTimeout(() => document.body.classList.remove("show-zones"), 3500);
+});
 
 /* ==========================================================================
    8) VOIX (off par défaut) — à implémenter (Task 8)
