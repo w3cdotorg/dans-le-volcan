@@ -144,7 +144,7 @@ h1 .volcan-em{display:inline-block;animation:secousse 2.6s ease-in-out infinite;
 }
 
 /* ------------------------------- scène (le volcan) */
-.scene{display:flex;flex-direction:column;gap:clamp(10px,2vw,16px)}
+.scene{position:relative;display:flex;flex-direction:column;gap:clamp(10px,2vw,16px)}
 .svgbox{
   position:relative;
   margin:2px auto 0;width:100%;
@@ -476,6 +476,60 @@ footer{
 .info.flash .big{animation:info-pop .3s ease}
 @keyframes info-pop{0%{transform:scale(.6)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
 
+/* ------------------------------- mini-jeu « Trouve la bonne partie ! » (Task 10)
+   Bandeau carte verre dépoli, caché par défaut (.open l'affiche), posé au-dessus
+   du SVG dans .scene (qui devient position:relative pour l'ancrer, lui et les
+   confettis). #quizQuit est ancré en absolu dans le bandeau. */
+.quiz-banner{
+  display:none;
+  position:relative;
+  flex-direction:column;align-items:center;gap:6px;
+  text-align:center;
+  padding:clamp(14px,2.4vw,20px) clamp(46px,7vw,60px);
+  border-radius:var(--r-md);
+  background:linear-gradient(168deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
+  border:2px solid rgba(255,255,255,.24);
+  backdrop-filter:blur(10px);
+  box-shadow:0 18px 40px -22px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.quiz-banner.open{display:flex}
+.quiz-banner .quiz-q{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(1.1rem,3vw,1.5rem);line-height:1.2;
+  color:#fff;margin:0;
+}
+.quiz-banner .quiz-q.shake{animation:quiz-shake .5s ease}
+@keyframes quiz-shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)} 40%{transform:translateX(7px)}
+  60%{transform:translateX(-5px)} 80%{transform:translateX(4px)}
+}
+.quiz-banner .quiz-stars{font-size:clamp(1.3rem,3vw,1.7rem);margin:0;letter-spacing:.18em;min-height:1.4em}
+.quiz-quit{
+  position:absolute;top:8px;right:12px;
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.26);
+  color:var(--cream);font-size:1rem;cursor:pointer;
+  transition:transform .18s, background .2s;
+}
+.quiz-quit:hover{transform:scale(1.08);background:rgba(255,255,255,.24)}
+
+/* confettis : container absolu dans .scene (pointer-events:none : ne doit
+   jamais bloquer le clic des zones), ~24 particules DOM qui tombent en
+   tournant puis sont retirées par le JS après 2,5 s. */
+#confetti-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:9}
+#confetti-layer i{
+  position:absolute;top:-24px;left:0;
+  font-size:1.3rem;line-height:1;font-style:normal;
+  animation:confetti-chute linear forwards;
+}
+#confetti-layer i.sq{width:10px;height:10px;border-radius:3px;font-size:0}
+@keyframes confetti-chute{
+  0%{transform:translate(0,0) rotate(0deg);opacity:1}
+  100%{transform:translate(var(--dx,0px),420px) rotate(var(--rot,540deg));opacity:.1}
+}
+
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
 </style>
 </head>
@@ -502,6 +556,15 @@ footer{
 
   <!-- ======================= SCÈNE ======================= -->
   <main class="scene card" aria-label="Le volcan">
+    <!-- ============ mini-jeu « Trouve la bonne partie ! » (Task 10) ============
+         Caché par défaut, .open l'affiche (posée en JS par startQuiz()). -->
+    <div class="quiz-banner" id="quiz" aria-live="polite">
+      <button type="button" id="quizQuit" class="quiz-quit" aria-label="Quitter le jeu">✖️</button>
+      <p class="quiz-q" id="quizQ"></p>
+      <p class="quiz-stars" id="quizStars"></p>
+    </div>
+    <!-- confettis : particules DOM ajoutées/retirées par confetti() (Task 10) -->
+    <div id="confetti-layer" aria-hidden="true"></div>
     <div class="svgbox">
       <svg id="volcan" viewBox="0 0 900 560" role="img" aria-label="Le volcan">
         <defs>
@@ -2130,8 +2193,18 @@ function showInfo(id, el){
 }
 
 $$(".zone").forEach(z => {
-  z.addEventListener("click", () => showInfo(z.id, z));
-  z.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); showInfo(z.id, z); } });
+  // Pendant le mini-jeu (Task 10), un clic sur une zone sert à répondre à la
+  // question, pas à ouvrir la carte info : `quiz` (déclaré section 10) est
+  // dans la même portée de script que ces listeners, donc toujours à jour au
+  // moment du clic — même schéma que `say`, réassignée plus bas en Task 8.
+  z.addEventListener("click", () => { if (quiz){ onZoneClickInQuiz(z.id); return; } showInfo(z.id, z); });
+  z.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      if (quiz){ onZoneClickInQuiz(z.id); return; }
+      showInfo(z.id, z);
+    }
+  });
 });
 $("#zones").addEventListener("click", () => {
   document.body.classList.add("show-zones");
@@ -2262,8 +2335,107 @@ sceneSvg.addEventListener("pointerdown", e => { if (loupeOn) updateLens(e); });
 sceneSvg.addEventListener("pointermove", e => { if (loupeOn) updateLens(e); });
 
 /* ==========================================================================
-   10) MINI-JEU — à implémenter (Task 10)
+   10) MINI-JEU — « Trouve la bonne partie ! »
+   Produit : startQuiz() (branchée sur #jeu), overlay #quiz (bandeau question
+   + étoiles), confetti(). Consomme INFO, showInfo (contourné pendant le jeu,
+   cf. le listener de zones en section 7), say, glideCut, glideTime,
+   currentView, .zone.
    ========================================================================== */
+const QUIZ_POOL = [
+  {q:"Trouve la bouche du volcan : le cratère !", ids:["d-cratere","c-cratere"]},
+  {q:"Où le magma attend-il, bien au chaud, sous le volcan ?", ids:["c-chambre","c-magma"]},
+  {q:"Trouve le grand tuyau où grimpe le magma : la cheminée !", ids:["c-cheminee"]},
+  {q:"Qui écoute le volcan pour prévenir le village ?", ids:["d-volcanologue"]},
+  {q:"Trouve l'endroit où naît le magma, tout au fond !", ids:["p-fusion"]},
+  {q:"Montre la peau dure de la Terre : la croûte !", ids:["p-croute"]},
+  {q:"Trouve la rivière de feu qui descend la pente !", ids:["c-coulee"]},
+  {q:"Où habitent les gens, tout près du volcan ?", ids:["d-village"]},
+];
+let quiz = null;   // {questions:[...3], index, stars}
+
+// mapping id → vue : les préfixes (d- Dehors, c- Dedans, p- Profondeurs) sont
+// posés une fois pour toutes par les Tasks 2-4 sur CHAQUE id de zone — plus
+// fiable que de remonter le DOM jusqu'au groupe #g-* (id qui n'a pas ce préfixe).
+const vueDe = id => id.startsWith("d-") ? 0 : id.startsWith("c-") ? 1 : 2;
+
+function startQuiz(){
+  if (quiz) return;                                   // déjà en cours : on ignore un second clic sur #jeu
+  const qs = [...QUIZ_POOL].sort(() => Math.random() - .5).slice(0, 3);
+  quiz = { questions: qs, index: 0, stars: 0 };
+  $("#quiz").classList.add("open");
+  renderStars();
+  askNext();
+}
+function askNext(){
+  if (quiz.index >= 3){ endQuiz(); return; }
+  const q = quiz.questions[quiz.index];
+  const target = document.getElementById(q.ids[0]);
+  glideCut(vueDe(q.ids[0]));                          // on amène l'enfant sur la bonne vue
+  // certaines cibles sont dans la bonne vue mais invisibles au temps courant
+  // (ex. la coulée à t=0, cf. OPACITES en section 6) : on avance alors le
+  // temps jusqu'à l'éruption pour qu'elles apparaissent et restent trouvables.
+  // Les cibles toujours visibles (sans entrée dans OPACITES) ont une opacité
+  // calculée de 1 : le garde ne se déclenche donc que pour les bonnes cibles.
+  if (target && parseFloat(getComputedStyle(target).opacity) < .05) glideTime(2);
+  $("#quizQ").textContent = q.q;
+  say(q.q);
+}
+function onZoneClickInQuiz(id){
+  const q = quiz.questions[quiz.index];
+  if (q.ids.includes(id)){
+    quiz.stars++; quiz.index++;
+    confetti(); say("Bravo !"); renderStars();
+    setTimeout(askNext, 1200);
+  } else {
+    say("Presque ! Cherche encore.");
+    const qEl = $("#quizQ");
+    qEl.classList.remove("shake"); void qEl.offsetWidth;  // reflow : relance l'animation même sur erreur consécutive
+    qEl.classList.add("shake");
+    setTimeout(() => qEl.classList.remove("shake"), 500);
+  }
+}
+function renderStars(){ $("#quizStars").textContent = "⭐".repeat(quiz.stars); }
+function endQuiz(){
+  $("#quizQ").textContent = "Bravo, champion des volcans ! ⭐⭐⭐";
+  say("Bravo, tu es un vrai petit volcanologue !");
+  confetti(); confetti();
+  setTimeout(closeQuiz, 3000);
+}
+function closeQuiz(){
+  $("#quiz").classList.remove("open");
+  quiz = null;
+  $("#quizQ").textContent = "";
+  $("#quizStars").textContent = "";
+  $("#label-flottant").classList.remove("visible");     // étiquette flottante laissée par une exploration précédente
+}
+$("#jeu").addEventListener("click", startQuiz);
+$("#quizQuit").addEventListener("click", closeQuiz);
+
+/* confettis : ~24 particules DOM (emoji 🎉⭐🌋 et carrés colorés), tombent en
+   tournant (@keyframes confetti-chute, section CSS), retirées après 2,5 s.
+   Container #confetti-layer : position absolue dans .scene, pointer-events
+   none (posé en CSS). Volontairement léger : pas de canvas, pas de lib. */
+const CONFETTI_EMOJI = ["🎉","⭐","🌋"];
+const CONFETTI_COLORS = ["#ff5a2a","#ffb15c","#7ed98a","#8fd3ff","#ffe066"];
+function confetti(){
+  const layer = $("#confetti-layer");
+  for (let i = 0; i < 24; i++){
+    const p = document.createElement("i");
+    if (Math.random() < .55){
+      p.textContent = CONFETTI_EMOJI[Math.floor(Math.random() * CONFETTI_EMOJI.length)];
+    } else {
+      p.classList.add("sq");
+      p.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    }
+    p.style.left = (Math.random() * 100) + "%";
+    p.style.setProperty("--dx", ((Math.random() * 160) - 80) + "px");
+    p.style.setProperty("--rot", (360 + Math.random() * 360) + "deg");
+    p.style.animationDuration = (1.6 + Math.random() * .9) + "s";
+    p.style.animationDelay = (Math.random() * .3) + "s";
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), 2500);
+  }
+}
 
 /* ---------- état initial : le paysage (Dehors), pas la coupe ---------- */
 setCut(0);
