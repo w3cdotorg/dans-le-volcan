@@ -273,6 +273,19 @@ footer{
   padding:6px var(--pad) 30px;color:#b09bd6;font-size:.86rem;font-weight:500;
 }
 
+/* ------------------------------- fumerolles (vue Dehors)
+   Volutes qui montent lentement au-dessus du cratère.
+   En @keyframes CSS pour être coupées par la règle reduced-motion. */
+#d-fumee .volute{transform-box:fill-box;transform-origin:50% 100%;animation:volute 7.5s ease-in-out infinite}
+#d-fumee .volute:nth-of-type(2){animation-duration:9.5s;animation-delay:-3s}
+#d-fumee .volute:nth-of-type(3){animation-duration:11.5s;animation-delay:-6s}
+@keyframes volute{
+  0%{opacity:0;transform:translate(0,8px) scale(.86)}
+  22%{opacity:.9}
+  68%{opacity:.55}
+  100%{opacity:0;transform:translate(-10px,-32px) scale(1.2)}
+}
+
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
 </style>
 </head>
@@ -302,14 +315,474 @@ footer{
     <div class="svgbox">
       <svg id="volcan" viewBox="0 0 900 560" role="img" aria-label="Le volcan">
         <defs>
-          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#8fd3ff"/>
+          <!-- ============ dégradés (préfixe grad-d- : vue Dehors) ============ -->
+          <linearGradient id="grad-d-ciel" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#79c7ff"/>
+            <stop offset=".34" stop-color="#a6dbfb"/>
+            <stop offset=".60" stop-color="#fff1dc"/>
             <stop offset="1" stop-color="#fff4e2"/>
           </linearGradient>
+          <radialGradient id="grad-d-soleil" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#fffbe8" stop-opacity=".95"/>
+            <stop offset=".34" stop-color="#ffeeb4" stop-opacity=".5"/>
+            <stop offset="1" stop-color="#ffe9a6" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="grad-d-brume" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff6e6" stop-opacity="0"/>
+            <stop offset="1" stop-color="#fff6e6" stop-opacity=".8"/>
+          </linearGradient>
+          <linearGradient id="grad-d-cone" x1="1" y1="0" x2=".1" y2=".8">
+            <stop offset="0" stop-color="#b3a0ad"/>
+            <stop offset=".38" stop-color="#8b7889"/>
+            <stop offset=".76" stop-color="#6b5b73"/>
+            <stop offset="1" stop-color="#584a63"/>
+          </linearGradient>
+          <linearGradient id="grad-d-calotte" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#dccbdb" stop-opacity=".62"/>
+            <stop offset="1" stop-color="#dccbdb" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="grad-d-vieille" x1="0" y1="0" x2=".3" y2="1">
+            <stop offset="0" stop-color="#3b3149"/>
+            <stop offset="1" stop-color="#221b2e"/>
+          </linearGradient>
+          <linearGradient id="grad-d-lave" x1="0" y1="0" x2=".2" y2="1">
+            <stop offset="0" stop-color="#fff0b0"/>
+            <stop offset=".28" stop-color="#ffb15c"/>
+            <stop offset="1" stop-color="#ff5a2a"/>
+          </linearGradient>
+          <radialGradient id="grad-d-lueur" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#fff2c0"/>
+            <stop offset=".38" stop-color="#ff7a3c"/>
+            <stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/>
+          </radialGradient>
+          <!-- userSpaceOnUse : un seul dégradé pour toutes les boules du panache,
+               sinon chaque cercle est ombré séparément et les raccords se voient -->
+          <linearGradient id="grad-d-panache" gradientUnits="userSpaceOnUse" x1="380" y1="112" x2="516" y2="8">
+            <stop offset="0" stop-color="#8b8296"/>
+            <stop offset=".55" stop-color="#b3aabe"/>
+            <stop offset="1" stop-color="#ddd6e4"/>
+          </linearGradient>
+          <linearGradient id="grad-d-riviere" x1="0" y1="0" x2=".25" y2="1">
+            <stop offset="0" stop-color="#8fd3ff"/>
+            <stop offset="1" stop-color="#3f93cf"/>
+          </linearGradient>
+          <linearGradient id="grad-d-prairie" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#83c78d"/>
+            <stop offset="1" stop-color="#57a768"/>
+          </linearGradient>
+          <linearGradient id="grad-d-prairie2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5fae70"/>
+            <stop offset="1" stop-color="#43975b"/>
+          </linearGradient>
+
+          <!-- ============ formes réutilisées ============ -->
+          <!-- conifère : les étages n'ont pas de fill → ils héritent du <use> -->
+          <g id="d-sapin">
+            <rect x="-3" y="-11" width="6" height="13" rx="2" fill="#6d4c37"/>
+            <path d="M0 -31 L22 -2 Q11 3 0 2 Q-11 3 -22 -2 Z"/>
+            <path d="M0 -45 L18 -17 Q9 -12 0 -13 Q-9 -12 -18 -17 Z"/>
+            <path d="M0 -58 L13 -32 Q6.5 -28 0 -28 Q-6.5 -28 -13 -32 Z"/>
+          </g>
+          <!-- fleur de prairie : les pétales héritent du fill du <use> -->
+          <g id="d-fleur">
+            <path d="M0 0 C-.5 -5 .5 -9 0 -12" stroke="#3f8f52" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+            <path d="M0 -5 C-5 -6 -7 -9 -3 -10 C-1 -9 -.5 -7 0 -5 Z" fill="#4aa562"/>
+            <circle cx="0" cy="-20" r="4.2"/>
+            <circle cx="-4.76" cy="-16.55" r="4.2"/>
+            <circle cx="-2.94" cy="-10.95" r="4.2"/>
+            <circle cx="2.94" cy="-10.95" r="4.2"/>
+            <circle cx="4.76" cy="-16.55" r="4.2"/>
+            <circle cx="0" cy="-15" r="2.7" fill="#ffd45e"/>
+          </g>
+          <!-- pousse verte (phase « repos ») -->
+          <g id="d-pousse">
+            <path d="M0 0 C.5 -5 -.5 -9 0 -13" stroke="#3f9d5a" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M0 -8 C-7 -11 -9 -17 -2 -16 C1 -14 1 -10 0 -8 Z" fill="#4fb46a"/>
+            <path d="M0 -11 C7 -14 9 -20 2 -19 C-1 -17 -1 -13 0 -11 Z" fill="#6ccb84"/>
+          </g>
+          <!-- oiseau en « accent » -->
+          <g id="d-oiseau">
+            <path d="M-11 0 Q-5.5 -7 0 -1.5 Q5.5 -7 11 0" fill="none" stroke="#4a4159" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          <!-- les 3 langues de coulée : servent en orange (éruption) puis en noir (refroidi) -->
+          <g id="d-langues">
+            <path d="M436 126 C428 168 416 212 402 256 C393 286 385 310 378 334 Q396 344 414 334 C419 310 425 284 431 256 C439 210 448 166 452 126 Z"/>
+            <path d="M468 126 C480 166 502 208 528 244 C550 274 576 300 594 324 Q590 338 566 336 C544 312 518 284 496 252 C472 216 454 174 448 128 Z"/>
+            <path d="M424 128 C410 164 390 200 366 232 C346 258 328 282 314 306 Q322 320 344 316 C360 294 378 270 396 244 C418 210 436 176 446 132 Z"/>
+          </g>
         </defs>
-        <!-- placeholder : remplacé en Task 2 -->
-        <rect x="0" y="0" width="900" height="560" fill="url(#skyGrad)"/>
-        <polygon points="450,110 720,340 180,340" fill="#6b5b73"/>
+
+        <!-- ==================================================================
+             CIEL — fond partagé Dehors / Dedans
+             ================================================================== -->
+        <g id="g-ciel">
+          <rect x="0" y="0" width="900" height="560" fill="url(#grad-d-ciel)"/>
+
+          <!-- soleil doux, en haut à droite -->
+          <circle cx="792" cy="64" r="82" fill="url(#grad-d-soleil)"/>
+          <circle cx="792" cy="64" r="33" fill="#fff8dc" opacity=".92"/>
+          <circle cx="792" cy="64" r="24" fill="#fffdf1" opacity=".85"/>
+
+          <!-- nuage 1 : le gros, cliquable -->
+          <g id="d-nuage" class="zone" tabindex="0" role="button" transform="translate(202 80)">
+            <g fill="#ffffff" opacity=".95">
+              <ellipse cx="-48" cy="8" rx="35" ry="22"/>
+              <ellipse cx="-9" cy="-10" rx="43" ry="30"/>
+              <ellipse cx="33" cy="1" rx="36" ry="24"/>
+              <ellipse cx="62" cy="11" rx="24" ry="16"/>
+              <rect x="-80" y="6" width="164" height="21" rx="10.5"/>
+            </g>
+            <path d="M-80 22 Q-20 32 84 22 L84 27 Q-20 34 -80 27 Z" fill="#cfe4f4" opacity=".7"/>
+          </g>
+
+          <!-- nuage 2 -->
+          <g fill="#ffffff" opacity=".85" transform="translate(614 50) scale(.72)">
+            <ellipse cx="-38" cy="7" rx="28" ry="18"/>
+            <ellipse cx="-2" cy="-8" rx="36" ry="25"/>
+            <ellipse cx="32" cy="4" rx="26" ry="17"/>
+            <rect x="-64" y="4" width="120" height="18" rx="9"/>
+          </g>
+
+          <!-- nuage 3 : lointain, effiloché -->
+          <g fill="#ffffff" opacity=".6" transform="translate(112 194) scale(.56)">
+            <ellipse cx="-34" cy="6" rx="26" ry="14"/>
+            <ellipse cx="0" cy="-5" rx="34" ry="20"/>
+            <ellipse cx="32" cy="4" rx="24" ry="13"/>
+            <rect x="-58" y="2" width="112" height="14" rx="7"/>
+          </g>
+        </g>
+
+        <!-- ==================================================================
+             DEHORS — le volcan endormi dans son paysage
+             ================================================================== -->
+        <g id="g-dehors">
+
+          <!-- ---------- collines lointaines + brume d'horizon ---------- -->
+          <path d="M-10 346 C90 320 200 312 300 322 C372 330 416 336 460 336 C540 332 620 310 720 314 C822 318 880 330 910 346 Z" fill="#b6d6c6" opacity=".85"/>
+          <path d="M-10 346 C34 316 88 300 142 306 C190 312 218 328 244 346 Z" fill="#96c0ae"/>
+          <path d="M652 346 C694 320 750 302 806 308 C856 314 888 328 910 346 Z" fill="#9dc7b3"/>
+          <rect x="0" y="300" width="900" height="46" fill="url(#grad-d-brume)"/>
+
+          <!-- ---------- le cône ---------- -->
+          <g id="d-cone" class="zone" tabindex="0" role="button">
+            <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 Z" fill="url(#grad-d-cone)"/>
+            <!-- calotte de cendre claire, sous le sommet -->
+            <path d="M408 116 Q450 146 492 116 C510 156 528 196 548 228 C516 242 478 248 450 248 C422 248 384 242 352 228 C372 196 390 156 408 116 Z" fill="url(#grad-d-calotte)"/>
+            <!-- flanc droit éclairé par le soleil -->
+            <path d="M492 116 C568 254 660 318 720 340 L686 340 C632 312 550 246 482 122 Z" fill="#e2d2df" opacity=".4"/>
+            <!-- flanc gauche à l'ombre -->
+            <path d="M408 116 C332 254 240 318 180 340 L226 340 C296 310 372 246 418 122 Z" fill="#2c2440" opacity=".26"/>
+            <!-- ravines : elles convergent vers le sommet et s'évasent vers la base -->
+            <g fill="none" stroke="#443853" stroke-linecap="round" opacity=".42">
+              <path d="M440 146 C433 186 423 222 409 256 C399 282 391 304 383 324" stroke-width="3.2"/>
+              <path d="M452 150 C452 190 454 228 458 264 C461 290 464 308 468 328" stroke-width="2.6"/>
+              <path d="M464 146 C473 184 487 218 505 250 C519 276 535 298 549 318" stroke-width="3"/>
+              <path d="M428 144 C416 180 400 212 380 242 C362 268 343 293 327 315" stroke-width="3.6"/>
+              <path d="M476 142 C491 176 509 204 531 232 C551 256 573 281 591 301" stroke-width="2.8"/>
+              <path d="M436 154 C430 178 425 200 419 222" stroke-width="2"/>
+              <path d="M468 156 C476 179 486 199 496 219" stroke-width="2"/>
+              <path d="M418 160 C406 190 391 216 373 240" stroke-width="1.8"/>
+              <path d="M486 158 C500 184 517 206 536 228" stroke-width="1.8"/>
+            </g>
+            <!-- reflets de roche, sur la crête voisine de chaque ravine -->
+            <g fill="none" stroke="#e6d8e8" stroke-linecap="round" opacity=".24">
+              <path d="M446 150 C440 189 431 224 418 258" stroke-width="2.6"/>
+              <path d="M458 152 C459 191 462 228 466 262" stroke-width="2"/>
+              <path d="M471 150 C481 187 496 220 514 252" stroke-width="2.6"/>
+              <path d="M422 150 C410 185 394 216 375 245" stroke-width="2.4"/>
+              <path d="M482 148 C497 180 515 207 536 234" stroke-width="2.2"/>
+            </g>
+            <!-- pied du cône posé dans l'herbe -->
+            <path d="M180 340 C260 332 360 328 450 328 C540 328 640 332 720 340 Z" fill="#3a2f46" opacity=".18"/>
+          </g>
+
+          <!-- ---------- ancienne coulée figée, flanc gauche ---------- -->
+          <g id="d-ancienne-coulee" class="zone" tabindex="0" role="button">
+            <path d="M416 130 C392 172 350 228 314 272 C288 304 266 326 250 340 L306 340 C322 322 344 298 368 268 C398 228 424 174 438 136 Z" fill="url(#grad-d-vieille)"/>
+            <g fill="#544a63" opacity=".65">
+              <ellipse cx="392" cy="176" rx="9" ry="6" transform="rotate(-52 392 176)"/>
+              <ellipse cx="352" cy="228" rx="11" ry="7" transform="rotate(-46 352 228)"/>
+              <ellipse cx="310" cy="284" rx="12" ry="7" transform="rotate(-38 310 284)"/>
+              <ellipse cx="278" cy="322" rx="13" ry="7" transform="rotate(-26 278 322)"/>
+            </g>
+            <g fill="none" stroke="#7f7292" stroke-width="1.7" opacity=".55" stroke-linecap="round">
+              <path d="M410 142 C388 186 352 238 320 280"/>
+              <path d="M424 152 C404 194 372 244 340 288"/>
+              <path d="M300 316 C288 326 280 332 272 338"/>
+            </g>
+            <!-- liseré clair sur le bord droit, pour détacher la coulée du flanc -->
+            <path d="M438 136 C424 174 398 228 368 268 C344 298 322 322 306 340" fill="none" stroke="#cbb9cc" stroke-width="2.2" opacity=".45" stroke-linecap="round"/>
+          </g>
+
+          <!-- ---------- coulées orange (éruption) : invisibles au repos ---------- -->
+          <g id="d-coulees-ext" opacity="0">
+            <use href="#d-langues" fill="url(#grad-d-lave)"/>
+            <use href="#d-langues" fill="#fff3c4" opacity=".45" transform="translate(0 -4) scale(.97) translate(14 8)"/>
+          </g>
+
+          <!-- ---------- coulées refroidies (repos) : invisibles au repos ---------- -->
+          <g id="d-coulees-noires" opacity="0">
+            <use href="#d-langues" fill="#2b2338"/>
+            <use href="#d-langues" fill="#5b5170" opacity=".35" transform="translate(6 -5) scale(.96) translate(20 10)"/>
+          </g>
+
+          <!-- ---------- pousses vertes (repos) : invisibles au repos ---------- -->
+          <g id="d-pousses" opacity="0">
+            <use href="#d-pousse" transform="translate(266 336) scale(1.1)"/>
+            <use href="#d-pousse" transform="translate(300 318) scale(.9)"/>
+            <use href="#d-pousse" transform="translate(342 296) scale(.8)"/>
+            <use href="#d-pousse" transform="translate(386 322) scale(1)"/>
+            <use href="#d-pousse" transform="translate(424 332) scale(.85)"/>
+            <use href="#d-pousse" transform="translate(468 334) scale(1.05)"/>
+            <use href="#d-pousse" transform="translate(506 322) scale(.9)"/>
+            <use href="#d-pousse" transform="translate(548 330) scale(1)"/>
+            <use href="#d-pousse" transform="translate(590 336) scale(.85)"/>
+            <use href="#d-pousse" transform="translate(628 334) scale(1.1)"/>
+          </g>
+
+          <!-- ---------- le cratère ---------- -->
+          <g id="d-cratere" class="zone" tabindex="0" role="button">
+            <!-- creux du cratère -->
+            <ellipse cx="450" cy="123" rx="43" ry="13" fill="#42364f"/>
+            <ellipse cx="450" cy="126" rx="32" ry="8.5" fill="#241c30"/>
+            <!-- lèvre arrière, en pleine lumière -->
+            <path d="M405 122 C405 111 425 104 450 104 C475 104 495 111 495 122 C495 114 476 110 450 110 C424 110 405 114 405 122 Z" fill="#dbcbdb"/>
+            <!-- lèvre avant -->
+            <path d="M406 127 C413 137 429 142 450 142 C471 142 487 137 494 127 C491 135 473 140 450 140 C427 140 409 135 406 127 Z" fill="#a08ea8"/>
+            <!-- petits blocs sur la lèvre -->
+            <g fill="#c9b7c9">
+              <path d="M414 113 l8 -6 6 6 z"/>
+              <path d="M440 106 l7 -6 7 6 z"/>
+              <path d="M468 108 l7 -6 6 6 z"/>
+              <path d="M485 118 l6 -5 5 6 z"/>
+            </g>
+          </g>
+
+          <!-- ---------- lueur rouge du cratère : invisible au repos ---------- -->
+          <g id="d-lueur-cratere" opacity="0">
+            <ellipse cx="450" cy="122" rx="100" ry="46" fill="url(#grad-d-lueur)" opacity=".55"/>
+            <ellipse cx="450" cy="124" rx="36" ry="11" fill="url(#grad-d-lueur)"/>
+            <ellipse cx="450" cy="124" rx="23" ry="6.5" fill="#fff0b8"/>
+          </g>
+
+          <!-- ---------- grand panache : invisible au repos ---------- -->
+          <g id="d-panache-ext" opacity="0" fill="url(#grad-d-panache)">
+            <circle cx="446" cy="98" r="20"/>
+            <circle cx="443" cy="76" r="23"/>
+            <circle cx="450" cy="50" r="38"/>
+            <circle cx="404" cy="58" r="30"/>
+            <circle cx="496" cy="56" r="30"/>
+            <circle cx="368" cy="70" r="24"/>
+            <circle cx="532" cy="68" r="24"/>
+            <circle cx="428" cy="32" r="26"/>
+            <circle cx="476" cy="30" r="26"/>
+            <circle cx="450" cy="19" r="15"/>
+            <g fill="#efeaf4" opacity=".55">
+              <circle cx="432" cy="42" r="16"/>
+              <circle cx="470" cy="46" r="13"/>
+              <circle cx="410" cy="60" r="12"/>
+            </g>
+          </g>
+
+          <!-- ---------- fumerolles (filet de fumée du volcan endormi) ---------- -->
+          <g id="d-fumee" class="zone" tabindex="0" role="button"
+             fill="none" stroke="#ffffff" stroke-linecap="round" opacity=".92">
+            <path class="volute" d="M436 112 C424 92 442 78 430 56 C422 41 438 30 432 14" stroke-width="9"/>
+            <path class="volute" d="M453 110 C447 92 460 80 452 62 C445 47 457 38 452 24" stroke-width="6.5"/>
+            <path class="volute" d="M470 114 C465 98 476 88 470 72 C466 60 473 52 470 42" stroke-width="4.8"/>
+          </g>
+
+          <!-- ---------- le chemin en lacets ---------- -->
+          <g id="d-chemin" class="zone" tabindex="0" role="button" fill="none" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M600 342 Q628 336 626 326 Q620 312 528 308 Q506 302 586 292 Q604 284 500 272 Q484 264 554 254 Q568 246 490 234 Q476 226 528 214 Q538 206 486 194 Q476 186 504 174 Q512 166 480 154 Q472 146 486 138 L472 128"
+                  stroke="#7d6549" stroke-width="6.5" opacity=".45"/>
+            <path d="M600 342 Q628 336 626 326 Q620 312 528 308 Q506 302 586 292 Q604 284 500 272 Q484 264 554 254 Q568 246 490 234 Q476 226 528 214 Q538 206 486 194 Q476 186 504 174 Q512 166 480 154 Q472 146 486 138 L472 128"
+                  stroke="#f2e0bd" stroke-width="3.2" stroke-dasharray="8 5"/>
+          </g>
+
+          <!-- ---------- la prairie (premier plan) ---------- -->
+          <g id="d-prairie" class="zone" tabindex="0" role="button">
+            <path d="M0 338 C120 330 260 336 400 336 C560 336 720 330 900 338 L900 560 L0 560 Z" fill="#98cf9c"/>
+            <path d="M0 398 C130 382 300 392 470 388 C630 384 780 374 900 384 L900 560 L0 560 Z" fill="url(#grad-d-prairie)"/>
+            <path d="M0 496 C140 476 320 488 500 484 C680 480 800 472 900 480 L900 560 L0 560 Z" fill="url(#grad-d-prairie2)"/>
+            <!-- touffes d'herbe -->
+            <g fill="none" stroke="#3a8b50" stroke-width="2.8" stroke-linecap="round" opacity=".72">
+              <path d="M40 388 C38 380 36 376 34 372 M46 388 C47 380 49 376 51 373"/>
+              <path d="M150 380 C148 372 146 368 144 364 M156 380 C157 373 159 369 161 366"/>
+              <path d="M282 386 C280 378 278 374 276 370 M288 386 C289 379 291 375 293 372"/>
+              <path d="M96 470 C93 460 91 455 88 450 M104 470 C105 461 108 455 111 451"/>
+              <path d="M232 458 C229 449 227 444 224 439 M240 458 C241 449 244 444 247 440"/>
+              <path d="M400 470 C397 461 395 456 392 451 M408 470 C409 461 412 456 415 452"/>
+              <path d="M66 546 C62 534 60 528 56 522 M76 546 C77 534 81 528 85 522"/>
+              <path d="M300 548 C296 536 294 530 290 524 M310 548 C311 536 315 530 319 524"/>
+              <path d="M470 542 C466 530 464 524 460 518 M480 542 C481 530 485 524 489 518"/>
+            </g>
+            <!-- fleurs -->
+            <use href="#d-fleur" fill="#fffdf4" transform="translate(58 414) scale(1.15)"/>
+            <use href="#d-fleur" fill="#ffd9e8" transform="translate(126 462) scale(1.3)"/>
+            <use href="#d-fleur" fill="#fff0a8" transform="translate(42 522) scale(1.5)"/>
+            <use href="#d-fleur" fill="#e3caf4" transform="translate(196 506) scale(1.35)"/>
+            <use href="#d-fleur" fill="#fffdf4" transform="translate(272 548) scale(1.55)"/>
+            <use href="#d-fleur" fill="#ffd9e8" transform="translate(356 498) scale(1.3)"/>
+            <use href="#d-fleur" fill="#fff0a8" transform="translate(438 546) scale(1.5)"/>
+            <use href="#d-fleur" fill="#e3caf4" transform="translate(154 396) scale(.95)"/>
+            <use href="#d-fleur" fill="#fffdf4" transform="translate(600 400) scale(.95)"/>
+          </g>
+
+          <!-- ---------- la forêt de conifères, 2 plans ---------- -->
+          <g id="d-foret" class="zone" tabindex="0" role="button">
+            <!-- ceinture boisée au pied du cône : relie le volcan au paysage -->
+            <path d="M182 340 C196 336 204 320 220 332 C234 316 244 308 260 322 C276 306 286 298 302 312 C318 296 330 290 346 304 C362 290 376 286 392 300 C408 288 422 288 438 302 C454 292 468 294 484 306 C500 298 514 302 530 314 C546 308 560 312 576 322 C592 316 606 320 622 330 C638 326 652 330 666 336 C682 332 700 336 718 340 Z"
+                  fill="#2f7a4c" opacity=".62"/>
+            <!-- plan lointain : sur les flancs, teintes bleutées -->
+            <g opacity=".92">
+              <use href="#d-sapin" fill="#3f8368" transform="translate(202 338) scale(.52)"/>
+              <use href="#d-sapin" fill="#437f66" transform="translate(228 324) scale(.44)"/>
+              <use href="#d-sapin" fill="#3c7a60" transform="translate(252 310) scale(.5)"/>
+              <use href="#d-sapin" fill="#468a6d" transform="translate(276 294) scale(.4)"/>
+              <use href="#d-sapin" fill="#3f8368" transform="translate(698 338) scale(.5)"/>
+              <use href="#d-sapin" fill="#437f66" transform="translate(672 324) scale(.44)"/>
+              <use href="#d-sapin" fill="#3c7a60" transform="translate(648 310) scale(.52)"/>
+              <use href="#d-sapin" fill="#468a6d" transform="translate(624 294) scale(.4)"/>
+            </g>
+            <!-- plan proche : sur la prairie, verts francs -->
+            <use href="#d-sapin" fill="#357f4b" transform="translate(96 356) scale(.78)"/>
+            <use href="#d-sapin" fill="#2f8a4c" transform="translate(146 348) scale(.64)"/>
+            <use href="#d-sapin" fill="#3f9d5a" transform="translate(38 366) scale(.92)"/>
+            <use href="#d-sapin" fill="#347c48" transform="translate(190 352) scale(.7)"/>
+            <use href="#d-sapin" fill="#3f9d5a" transform="translate(238 344) scale(.58)"/>
+            <use href="#d-sapin" fill="#2f8a4c" transform="translate(786 350) scale(.66)"/>
+            <use href="#d-sapin" fill="#357f4b" transform="translate(834 358) scale(.8)"/>
+            <use href="#d-sapin" fill="#3f9d5a" transform="translate(884 370) scale(.94)"/>
+          </g>
+
+          <!-- ---------- la rivière ---------- -->
+          <g id="d-riviere" class="zone" tabindex="0" role="button">
+            <path d="M262 340 C296 366 344 376 390 396 C438 416 460 442 506 460 C566 484 644 490 704 510 C752 526 786 542 806 560 L866 560 C842 540 806 524 754 508 C690 488 614 482 556 458 C510 440 490 416 442 396 C402 380 314 360 280 334 Z" fill="url(#grad-d-riviere)"/>
+            <g fill="none" stroke="#dff2ff" stroke-linecap="round" opacity=".7">
+              <path d="M300 358 C338 378 372 388 412 406" stroke-width="2.4"/>
+              <path d="M452 424 C486 442 502 458 540 472" stroke-width="3"/>
+              <path d="M596 484 C640 494 682 502 720 516" stroke-width="3.4"/>
+              <path d="M772 532 C796 542 812 550 824 560" stroke-width="4"/>
+            </g>
+            <g fill="#ffffff" opacity=".45">
+              <ellipse cx="366" cy="386" rx="10" ry="3"/>
+              <ellipse cx="486" cy="446" rx="13" ry="3.5"/>
+              <ellipse cx="654" cy="494" rx="17" ry="4"/>
+            </g>
+          </g>
+
+          <!-- ---------- le village ---------- -->
+          <g id="d-village" class="zone" tabindex="0" role="button">
+            <!-- ombres au sol -->
+            <g fill="#2f5c3c" opacity=".16">
+              <ellipse cx="648" cy="410" rx="30" ry="6"/>
+              <ellipse cx="744" cy="402" rx="52" ry="8"/>
+              <ellipse cx="824" cy="404" rx="30" ry="6"/>
+              <ellipse cx="684" cy="458" rx="26" ry="6"/>
+              <ellipse cx="776" cy="460" rx="42" ry="8"/>
+              <ellipse cx="868" cy="452" rx="28" ry="6"/>
+            </g>
+
+            <!-- maison lointaine, à gauche -->
+            <g>
+              <rect x="628" y="382" width="42" height="27" rx="2" fill="#fdf1da"/>
+              <path d="M622 383 L649 361 L676 383 Z" fill="#c8452f"/>
+              <rect x="641" y="396" width="10" height="13" rx="1.5" fill="#8a5a3a"/>
+              <rect x="631" y="387" width="8" height="7" rx="1.5" fill="#ffd98a"/>
+              <rect x="659" y="387" width="8" height="7" rx="1.5" fill="#ffd98a"/>
+            </g>
+
+            <!-- l'église et son clocher -->
+            <g>
+              <rect x="726" y="372" width="60" height="29" rx="2" fill="#fdf1da"/>
+              <path d="M719 373 L756 349 L793 373 Z" fill="#c8452f"/>
+              <rect x="698" y="352" width="28" height="49" rx="2" fill="#fbe9cf"/>
+              <path d="M692 353 L712 316 L732 353 Z" fill="#b93f31"/>
+              <path d="M712 316 L712 303 M706 308 L718 308" stroke="#8a6a48" stroke-width="2.6" stroke-linecap="round"/>
+              <circle cx="712" cy="368" r="7.5" fill="#fffaf0" stroke="#b39a78" stroke-width="1.6"/>
+              <path d="M712 368 L712 363 M712 368 L716 370" stroke="#6b5b73" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M705 382 C705 377 719 377 719 382 L719 401 L705 401 Z" fill="#8a5a3a"/>
+              <rect x="742" y="380" width="10" height="9" rx="1.5" fill="#ffd98a"/>
+              <rect x="762" y="380" width="10" height="9" rx="1.5" fill="#ffd98a"/>
+            </g>
+
+            <!-- maison lointaine, à droite -->
+            <g>
+              <rect x="802" y="374" width="45" height="29" rx="2" fill="#fdf1da"/>
+              <path d="M795 375 L824 352 L853 375 Z" fill="#cf4a34"/>
+              <rect x="818" y="390" width="11" height="13" rx="1.5" fill="#8a5a3a"/>
+              <rect x="805" y="380" width="9" height="7" rx="1.5" fill="#ffd98a"/>
+              <rect x="835" y="380" width="9" height="7" rx="1.5" fill="#ffd98a"/>
+            </g>
+
+            <!-- petite maison au premier plan, à gauche -->
+            <g>
+              <rect x="664" y="431" width="40" height="26" rx="2" fill="#fdf1da"/>
+              <path d="M658 432 L684 412 L710 432 Z" fill="#cf4a34"/>
+              <rect x="679" y="443" width="11" height="14" rx="1.5" fill="#8a5a3a"/>
+              <rect x="667" y="436" width="8" height="7" rx="1.5" fill="#ffd98a"/>
+            </g>
+
+            <!-- grande maison au premier plan -->
+            <g>
+              <rect x="745" y="420" width="62" height="39" rx="2.5" fill="#fff5e3"/>
+              <path d="M737 421 L776 393 L815 421 Z" fill="#c8452f"/>
+              <rect x="766" y="437" width="15" height="22" rx="1.5" fill="#8a5a3a"/>
+              <circle cx="778" cy="447" r="1.4" fill="#ffd98a"/>
+              <rect x="750" y="428" width="12" height="10" rx="1.5" fill="#ffd98a"/>
+              <rect x="789" y="428" width="12" height="10" rx="1.5" fill="#ffd98a"/>
+              <rect x="789" y="444" width="12" height="10" rx="1.5" fill="#ffd98a"/>
+              <rect x="795" y="396" width="8" height="16" rx="2" fill="#a9705a"/>
+            </g>
+
+            <!-- maison au premier plan, à droite -->
+            <g>
+              <rect x="846" y="422" width="44" height="29" rx="2" fill="#fdf1da"/>
+              <path d="M839 423 L868 401 L897 423 Z" fill="#cf4a34"/>
+              <rect x="862" y="437" width="11" height="14" rx="1.5" fill="#8a5a3a"/>
+              <rect x="849" y="428" width="9" height="8" rx="1.5" fill="#ffd98a"/>
+            </g>
+          </g>
+
+          <!-- ---------- la petite volcanologue ---------- -->
+          <g id="d-volcanologue" class="zone" tabindex="0" role="button" transform="translate(556 396)">
+            <ellipse cx="0" cy="2" rx="14" ry="4" fill="#2f5c3c" opacity=".2"/>
+            <!-- jambes + bottes -->
+            <path d="M-5 -18 L-6 -3 M5 -18 L6 -3" stroke="#4a5b7a" stroke-width="6" stroke-linecap="round"/>
+            <ellipse cx="-7" cy="-1" rx="5.5" ry="3" fill="#3d3247"/>
+            <ellipse cx="7" cy="-1" rx="5.5" ry="3" fill="#3d3247"/>
+            <!-- sac à dos -->
+            <rect x="7" y="-38" width="12" height="18" rx="5" fill="#e0663f"/>
+            <!-- veste -->
+            <path d="M-10 -40 C-10 -45 10 -45 10 -40 L11 -19 C4 -16 -4 -16 -11 -19 Z" fill="#f2c14b"/>
+            <path d="M-10 -40 C-10 -45 10 -45 10 -40 L10.4 -32 C3 -30 -3 -30 -10.4 -32 Z" fill="#ffd875"/>
+            <!-- bras qui tiennent les jumelles -->
+            <path d="M-9 -38 C-14 -34 -13 -28 -7 -30" fill="none" stroke="#f2c14b" stroke-width="5" stroke-linecap="round"/>
+            <path d="M9 -38 C14 -34 13 -28 7 -30" fill="none" stroke="#f2c14b" stroke-width="5" stroke-linecap="round"/>
+            <!-- tête -->
+            <circle cx="0" cy="-49" r="8.5" fill="#f3c69c"/>
+            <path d="M-8 -53 C-6 -60 6 -60 8 -53 C4 -56 -4 -56 -8 -53 Z" fill="#6b4a34"/>
+            <!-- jumelles -->
+            <rect x="-9" y="-51" width="7.5" height="6.5" rx="2.5" fill="#3d3247"/>
+            <rect x="1.5" y="-51" width="7.5" height="6.5" rx="2.5" fill="#3d3247"/>
+            <rect x="-2" y="-49.5" width="4" height="3.5" rx="1.5" fill="#5a4d68"/>
+            <!-- sourire -->
+            <path d="M-3 -42.5 Q0 -40.5 3 -42.5" fill="none" stroke="#a9705a" stroke-width="1.4" stroke-linecap="round"/>
+            <!-- chapeau -->
+            <ellipse cx="0" cy="-56" rx="16" ry="4.5" fill="#c8452f"/>
+            <path d="M-8.5 -57 C-8.5 -66 8.5 -66 8.5 -57 Z" fill="#e0663f"/>
+            <path d="M-8.6 -58.5 L8.6 -58.5" stroke="#a5341f" stroke-width="2.4" stroke-linecap="round"/>
+          </g>
+
+          <!-- ---------- les oiseaux ---------- -->
+          <g id="d-oiseaux" class="zone" tabindex="0" role="button">
+            <use href="#d-oiseau" transform="translate(692 168) scale(1.15)"/>
+            <use href="#d-oiseau" transform="translate(742 194) scale(.85)"/>
+            <use href="#d-oiseau" transform="translate(654 206) scale(.7)"/>
+          </g>
+
+        </g>
       </svg>
     </div>
 
