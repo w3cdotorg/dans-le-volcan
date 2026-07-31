@@ -107,6 +107,9 @@ de deux phrases adaptée à un enfant de 4-5 ans, lecture à voix haute.
 - Les deux curseurs pilotent des interpolations d'opacité/transformation par
   groupe SVG ; les éléments communs (cône, ciel, sol) sont partagés entre vues.
 - Synthèse vocale : `speechSynthesis` du navigateur, voix française.
+  **Coupée par défaut au chargement** : un bouton son (visible et gros) permet de
+  l'activer ; tant qu'elle est coupée, les étiquettes et explications s'affichent
+  sans être lues.
 
 ## Hors périmètre (YAGNI)
 
