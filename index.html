@@ -1749,9 +1749,13 @@ footer{
         </g>
 
         <!-- ============ étiquette flottante (Task 7) ============
-             Suit la zone cliquée. Repositionnée en JS via getBoundingClientRect +
-             getScreenCTM (fonctionne même pour les zones sous clip-path, ex.
-             c-magma, c-strates-lave : le rect rendu tient compte de la découpe).
+             Suit la zone cliquée. Repositionnée en JS via visibleClientRect()
+             + getScreenCTM. getBoundingClientRect() seul IGNORE le clip-path
+             (c'est un effet de peinture, pas une réduction de boîte) : pour
+             les zones sous clip-path (ex. c-magma, c-strates-lave),
+             visibleClientRect() clone temporairement la forme de découpe pour
+             lire son rect réel puis l'intersecte avec celui de la zone — voir
+             ce helper dans le <script>, section 7.
              pointer-events:none : elle ne doit jamais intercepter de clic. -->
         <g id="label-flottant" aria-hidden="true">
           <rect id="label-bg" x="0" y="0" width="0" height="0" rx="12" ry="12"/>
