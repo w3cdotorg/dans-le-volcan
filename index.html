@@ -2192,9 +2192,15 @@ function updateLens(e){
   if (!r.width || !r.height) return;
   const vx = clamp((e.clientX - r.left) / r.width, 0, 1) * 900;
   const vy = clamp((e.clientY - r.top) / r.height, 0, 1) * 560;
-  const w = 900 / LENS_ZOOM, h = 560 / LENS_ZOOM;
+  // #lens est un cercle 140×140 (ratio 1:1). Une fenêtre 900/Z × 560/Z garde
+  // le ratio 900:560 (~1.61:1) du volcan, PAS celui de la lentille : sans
+  // preserveAspectRatio="none" (qui déformerait le dessin), le comportement
+  // par défaut (xMidYMid meet) case cette fenêtre large dans le cercle et
+  // laisse des bandes vides en haut/bas — un letterboxing constant qui coupe
+  // le rond. La fenêtre de viewBox doit donc être CARRÉE, comme la lentille.
+  const side = 900 / LENS_ZOOM;
   lens.setAttribute("viewBox",
-    `${clamp(vx - w / 2, 0, 900 - w)} ${clamp(vy - h / 2, 0, 560 - h)} ${w} ${h}`);
+    `${clamp(vx - side / 2, 0, 900 - side)} ${clamp(vy - side / 2, 0, 560 - side)} ${side} ${side}`);
   // La lentille elle-même reste dans les bords de .svgbox (position:relative)
   // pour ne pas être tronquée par son overflow:hidden.
   lens.style.left = clamp(e.clientX - r.left - LENS_PX / 2, 0, r.width  - LENS_PX) + "px";
@@ -2202,16 +2208,31 @@ function updateLens(e){
 }
 
 // Filet de sécurité clic-à-travers : `pointer-events:none` sur #lens (posé en
-// CSS) est la protection "normale", MAIS testé en navigateur, le clic RÉEL
-// est quand même capté par le <use href="#scene"> (constat en Chromium :
-// le hit-test d'un <use> qui référence un élément d'un AUTRE <svg> racine
-// ignore le pointer-events:none posé sur le <use>/le <svg> qui le contient —
-// la géométrie clonée reste "cliquable" malgré la propriété calculée à
-// "none"). On ne peut pas compter uniquement sur la CSS : on intercepte donc
-// le click qui atterrit sur #lens, on démasque une fraction de seconde la
-// scène réelle dessous (display:none) pour trouver la véritable zone visée
-// via elementFromPoint, puis on relance un click synthétique sur elle —
-// exactement ce qu'aurait fait le navigateur si #lens n'existait pas.
+// CSS) est la protection "normale", MAIS testé en navigateur (Chromium,
+// Firefox ET WebKit — les 3 moteurs, via Playwright), le clic RÉEL est quand
+// même capté par le <use href="#scene"> : le hit-test d'un <use> qui
+// référence un élément d'un AUTRE <svg> racine ignore le pointer-events:none
+// posé sur le <use>/le <svg> qui le contient — la géométrie clonée reste
+// "cliquable" malgré la propriété calculée à "none". Ce n'est donc PAS une
+// bizarrerie d'un seul moteur : on ne peut pas compter uniquement sur la CSS
+// dans aucun des trois. On intercepte donc le click qui atterrit sur #lens,
+// on démasque une fraction de seconde la scène réelle dessous
+// (display:none) pour trouver la véritable zone visée via elementFromPoint,
+// puis on relance un click synthétique sur elle — exactement ce qu'aurait
+// fait le navigateur si #lens n'existait pas.
+// Un vrai clic natif focus d'abord le plus proche ANCÊTRE focusable de
+// l'élément visé (les `.zone` sont des <g tabindex="0">, pas les <path>/
+// <ellipse> qu'on touche réellement), puis déclenche "click". Sans ce focus,
+// une zone activée à travers la loupe garde le focus précédent : Tab/Entrée
+// deviennent incohérents juste après (cf. revue de code).
+function nearestFocusable(el){
+  let n = el;
+  while (n && n !== document.body){
+    if (n.hasAttribute && n.hasAttribute("tabindex")) return n;
+    n = n.parentElement;
+  }
+  return null;
+}
 lens.addEventListener("click", e => {
   e.stopPropagation();
   const wasDisplay = lens.style.display;
@@ -2219,6 +2240,8 @@ lens.addEventListener("click", e => {
   const real = document.elementFromPoint(e.clientX, e.clientY);
   lens.style.display = wasDisplay;
   if (real && real !== document.documentElement && real !== document.body){
+    const focusTarget = nearestFocusable(real);
+    if (focusTarget && typeof focusTarget.focus === "function") focusTarget.focus();
     real.dispatchEvent(new MouseEvent("click", {
       bubbles: true, cancelable: true, view: window,
       clientX: e.clientX, clientY: e.clientY
