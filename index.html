@@ -155,6 +155,33 @@ h1 .volcan-em{display:inline-block;animation:secousse 2.6s ease-in-out infinite;
 svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margin:0 auto}
 @media (max-width:900px){ svg#volcan{max-height:52vh} }
 
+/* ------------------------------- loupe (Task 9) */
+.scene.lens-on svg#volcan{cursor:none;touch-action:none}   /* le doigt déplace la loupe, pas la page */
+#lens{
+  display:none;                 /* activée en JS (loupeOn) */
+  position:absolute;
+  left:0;top:0;                  /* repositionné en JS à chaque pointermove */
+  width:140px;height:140px;
+  border-radius:50%;
+  overflow:hidden;                /* + border-radius : rogne le <use> en cercle */
+  background:#0c1420;             /* fond de secours pendant le tout premier rendu */
+  border:7px solid var(--cream);
+  box-shadow:0 18px 34px -12px rgba(0,0,0,.65), inset 0 0 0 2px rgba(0,0,0,.25);
+  pointer-events:none;             /* ne doit jamais voler le clic des zones */
+  z-index:5;
+}
+#lens::after{                     /* petit manche décoratif */
+  content:"";
+  position:absolute;
+  right:-9px;bottom:-28px;
+  width:15px;height:38px;
+  border-radius:7px;
+  background:linear-gradient(180deg, var(--cream), #b08a55 65%, #7d5f38);
+  transform:rotate(45deg);
+  transform-origin:top center;
+  box-shadow:0 4px 9px rgba(0,0,0,.5);
+}
+
 /* ------------------------------- curseur temps */
 .time-control{display:flex;flex-direction:column;gap:8px}
 #time{width:100%}
@@ -270,6 +297,11 @@ body[data-vue="2"]{--accent:var(--c-prof)}
 .btn:hover{transform:translateY(-3px) scale(1.03)}
 .btn:active{transform:translateY(0) scale(.97)}
 .btn.ghostbtn{background:rgba(255,255,255,.08);color:var(--cream);border-color:rgba(255,255,255,.24);box-shadow:none}
+.btn.ghostbtn.active{                 /* #loupeBtn actif (Task 9) */
+  background:color-mix(in srgb, var(--accent) 30%, transparent);
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
 .btn.play{background:linear-gradient(160deg,#ffd9a8,var(--lave));color:#2e0e02;box-shadow:0 10px 24px -12px rgba(255,90,42,.95)}
 .btn[aria-pressed="false"]{filter:grayscale(.5) brightness(.9)}
 
@@ -773,6 +805,16 @@ footer{
             <stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/>
           </radialGradient>
         </defs>
+
+        <!-- ============ #scene (Task 9) ============
+             Englobe tout le contenu visuel du volcan : c'est la cible du
+             <use href="#scene"> de la loupe (#lens, plus bas). #label-flottant
+             est volontairement laissé HORS de #scene (voir sa fermeture juste
+             avant lui) : recopiée telle quelle dans la lentille zoomée, cette
+             étiquette (dimensionnée pour la scène entière) déborderait à moitié
+             du cercle et serait illisible — un enfant n'y gagnerait rien. Le
+             contenu zoomé (vues + éruption) suffit et reste lisible. -->
+        <g id="scene">
 
         <!-- ==================================================================
              CIEL — fond partagé Dehors / Dedans
@@ -1748,6 +1790,8 @@ footer{
 
         </g>
 
+        </g><!-- /#scene (Task 9) -->
+
         <!-- ============ étiquette flottante (Task 7) ============
              Suit la zone cliquée. Repositionnée en JS via visibleClientRect()
              + getScreenCTM. getBoundingClientRect() seul IGNORE le clip-path
@@ -1761,6 +1805,15 @@ footer{
           <rect id="label-bg" x="0" y="0" width="0" height="0" rx="12" ry="12"/>
           <text id="label-text" x="0" y="0"></text>
         </g>
+      </svg>
+
+      <!-- ============ loupe (Task 9) ============
+           2e <svg>, absolue dans .svgbox (position:relative), qui clone la
+           scène via <use href="#scene"> et zoome en resserrant son propre
+           viewBox (voir section 9 du <script>). pointer-events:none : elle ne
+           doit jamais voler les clics des zones sous elle. Cachée par défaut. -->
+      <svg id="lens" viewBox="0 0 900 560" aria-hidden="true" focusable="false">
+        <use href="#scene"></use>
       </svg>
     </div>
 
@@ -2117,8 +2170,73 @@ $("#sound").addEventListener("click", () => {
 $("#say").addEventListener("click", () => { if (currentId) say(speakText(currentId)); });
 
 /* ==========================================================================
-   9) LOUPE — à implémenter (Task 9)
+   9) LOUPE
+   Technique : #lens est un 2e <svg>, absolu dans .svgbox, avec un
+   <use href="#scene"> qui clone tout le contenu du <svg id="volcan">. Le
+   zoom (Z=2.2) se fait en resserrant le viewBox de #lens sur une fenêtre
+   centrée sur le point survolé (conversion écran → coordonnées 0..900/0..560
+   via getBoundingClientRect, comme pour l'étiquette flottante en section 7).
+   Les opacités de vue/temps posées par setCut()/setTime() en style.opacity
+   INLINE sont clonées automatiquement par <use> (shadow DOM) : la loupe
+   reflète donc fidèlement la vue et le moment courants. Les règles CSS par
+   classe (ex. .show-zones .zone, .goutte) ne s'appliquent pas forcément à
+   l'intérieur du <use> selon le navigateur ; en pratique ça ne concerne que
+   des animations d'ambiance (pulsation des zones, gouttes de magma) —
+   figées dans la loupe, c'est un écart mineur et acceptable.
    ========================================================================== */
+let loupeOn = false;
+const lens = $("#lens"), sceneSvg = $("#volcan"), LENS_PX = 140, LENS_ZOOM = 2.2;
+
+function updateLens(e){
+  const r = sceneSvg.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const vx = clamp((e.clientX - r.left) / r.width, 0, 1) * 900;
+  const vy = clamp((e.clientY - r.top) / r.height, 0, 1) * 560;
+  const w = 900 / LENS_ZOOM, h = 560 / LENS_ZOOM;
+  lens.setAttribute("viewBox",
+    `${clamp(vx - w / 2, 0, 900 - w)} ${clamp(vy - h / 2, 0, 560 - h)} ${w} ${h}`);
+  // La lentille elle-même reste dans les bords de .svgbox (position:relative)
+  // pour ne pas être tronquée par son overflow:hidden.
+  lens.style.left = clamp(e.clientX - r.left - LENS_PX / 2, 0, r.width  - LENS_PX) + "px";
+  lens.style.top  = clamp(e.clientY - r.top  - LENS_PX / 2, 0, r.height - LENS_PX) + "px";
+}
+
+// Filet de sécurité clic-à-travers : `pointer-events:none` sur #lens (posé en
+// CSS) est la protection "normale", MAIS testé en navigateur, le clic RÉEL
+// est quand même capté par le <use href="#scene"> (constat en Chromium :
+// le hit-test d'un <use> qui référence un élément d'un AUTRE <svg> racine
+// ignore le pointer-events:none posé sur le <use>/le <svg> qui le contient —
+// la géométrie clonée reste "cliquable" malgré la propriété calculée à
+// "none"). On ne peut pas compter uniquement sur la CSS : on intercepte donc
+// le click qui atterrit sur #lens, on démasque une fraction de seconde la
+// scène réelle dessous (display:none) pour trouver la véritable zone visée
+// via elementFromPoint, puis on relance un click synthétique sur elle —
+// exactement ce qu'aurait fait le navigateur si #lens n'existait pas.
+lens.addEventListener("click", e => {
+  e.stopPropagation();
+  const wasDisplay = lens.style.display;
+  lens.style.display = "none";
+  const real = document.elementFromPoint(e.clientX, e.clientY);
+  lens.style.display = wasDisplay;
+  if (real && real !== document.documentElement && real !== document.body){
+    real.dispatchEvent(new MouseEvent("click", {
+      bubbles: true, cancelable: true, view: window,
+      clientX: e.clientX, clientY: e.clientY
+    }));
+  }
+});
+
+$("#loupeBtn").addEventListener("click", () => {
+  loupeOn = !loupeOn;
+  $(".scene").classList.toggle("lens-on", loupeOn);
+  $("#loupeBtn").classList.toggle("active", loupeOn);
+  lens.style.display = loupeOn ? "block" : "none";
+});
+
+// pointerdown en plus de pointermove : au doigt, il n'y a pas de survol
+// avant le premier contact, la loupe doit donc apparaître dès le "tap".
+sceneSvg.addEventListener("pointerdown", e => { if (loupeOn) updateLens(e); });
+sceneSvg.addEventListener("pointermove", e => { if (loupeOn) updateLens(e); });
 
 /* ==========================================================================
    10) MINI-JEU — à implémenter (Task 10)
