@@ -1746,6 +1746,29 @@ footer{
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 
+/* ---------- fabrique de glissé doux, annulable ----------
+   Chaque appel à la fonction retournée démarre un glissé easeOut vers `target`
+   (via `setter`, en lisant la position courante via `getter`). Un jeton de
+   génération invalide toute boucle requestAnimationFrame plus ancienne : un
+   nouvel appel à la même glide (clavier/pastille pendant un glissé en cours),
+   ou un `.cancel()` explicite (ex. drag manuel qui doit reprendre la main),
+   coupe net l'ancienne boucle avant qu'elle n'écrase la nouvelle position à la
+   frame suivante. Réutilisée par TASK 6 pour `glideTime`. */
+function makeGlide(setter, getter, duration = 500){
+  const token = {gen: 0};
+  function glide(target){
+    const my = ++token.gen, from = getter(), t0 = performance.now();
+    (function step(now){
+      if (my !== token.gen) return;                      // une glide plus récente ou un cancel() a pris le relais
+      const k = clamp((now - t0) / duration, 0, 1), e = k*(2-k); // easeOut
+      setter(from + (target - from) * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  glide.cancel = () => { token.gen++; };                  // invalide la boucle en vol sans repositionner
+  return glide;
+}
+
 /* ==========================================================================
    5) CURSEUR COUPE — fondu continu Dehors → Dedans → Profondeurs
    Produit : setCut(c), la variable `cut` (0..2), currentView() → 0|1|2.
@@ -1766,16 +1789,9 @@ function setCut(c){
   document.body.dataset.vue = Math.round(cut);          // accent de couleur par vue via CSS
 }
 const currentView = () => Math.round(cut);
-$("#cut").addEventListener("input", e => setCut(e.target.value / 100));
+const glideCut = makeGlide(setCut, () => cut, 500);
+$("#cut").addEventListener("input", e => { glideCut.cancel(); setCut(e.target.value / 100); });
 $$(".pill").forEach(p => p.addEventListener("click", () => glideCut(+p.dataset.cut)));
-function glideCut(target){                              // glissé doux ~500ms
-  const from = cut, t0 = performance.now();
-  (function step(now){
-    const k = clamp((now - t0) / 500, 0, 1), e = k*(2-k); // easeOut
-    setCut(from + (target - from) * e);
-    if (k < 1) requestAnimationFrame(step);
-  })(t0);
-}
 addEventListener("keydown", e => {
   if (e.key === "ArrowDown"){ e.preventDefault(); glideCut(clamp(Math.round(cut)+1,0,2)); }
   if (e.key === "ArrowUp"){ e.preventDefault(); glideCut(clamp(Math.round(cut)-1,0,2)); }
