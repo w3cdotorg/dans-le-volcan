@@ -1079,17 +1079,6 @@ footer{
             </g>
           </g>
 
-          <!-- ---------- la colonne de magma dans la cheminée ----------
-               dessinée « cheminée pleine » puis descendue de 120 px :
-               la tâche 6 pilotera translateY de 120 (endormi) à 0 (éruption) -->
-          <g clip-path="url(#clip-c-cheminee)">
-            <g id="c-magma-colonne" transform="translate(0 120)">
-              <path d="M437 197 C437 185 463 185 463 197 L463 470 L437 470 Z" fill="url(#grad-c-colonne)"/>
-              <ellipse cx="450" cy="192" rx="19" ry="9" fill="#fff6c8" opacity=".45"/>
-              <path d="M443 208 C441 232 442 256 445 280" fill="none" stroke="#fff0b0" stroke-width="2.4" opacity=".35" stroke-linecap="round"/>
-            </g>
-          </g>
-
           <!-- ---------- le cratère en coupe (l'entonnoir) ---------- -->
           <g id="c-cratere" class="zone" tabindex="0" role="button">
             <!-- la paroi de roche de l'entonnoir, dans le prolongement de la cheminée -->
@@ -1113,6 +1102,20 @@ footer{
               <path d="M440 106 l7 -6 7 6 z"/>
               <path d="M468 108 l7 -6 6 6 z"/>
               <path d="M485 118 l6 -5 5 6 z"/>
+            </g>
+          </g>
+
+          <!-- ---------- la colonne de magma dans la cheminée ----------
+               dessinée « cheminée pleine » puis descendue de 120 px : la tâche 6
+               pilotera translateY de 120 (endormi) à 0 (éruption).
+               Placée APRÈS #c-cratere (sinon le vide de l'entonnoir masque le
+               haut de la colonne quand elle est remontée) et AVANT #c-bouchon
+               (le bouchon reste posé sur le magma tant qu'il n'a pas sauté). -->
+          <g clip-path="url(#clip-c-cheminee)">
+            <g id="c-magma-colonne" transform="translate(0 120)">
+              <path d="M437 197 C437 185 463 185 463 197 L463 470 L437 470 Z" fill="url(#grad-c-colonne)"/>
+              <ellipse cx="450" cy="192" rx="19" ry="9" fill="#fff6c8" opacity=".45"/>
+              <path d="M443 208 C441 232 442 256 445 280" fill="none" stroke="#fff0b0" stroke-width="2.4" opacity=".35" stroke-linecap="round"/>
             </g>
           </g>
 
