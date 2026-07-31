@@ -426,8 +426,14 @@ footer{
 
 /* étiquette flottante SVG : petit label repositionné en JS près de la zone
    cliquée, en plus de la carte #info. pointer-events:none : elle ne doit
-   jamais intercepter de clic (ni gêner le futur mini-jeu de la Task 10). */
+   jamais intercepter de clic (ni gêner le futur mini-jeu de la Task 10).
+   Visibilité pilotée par une CLASSE (.visible), pas par style.opacity inline :
+   un inline style sur la même propriété que la règle de base ne l'emportait
+   pas de façon fiable ici (constaté en navigateur avec cette règle+transition
+   sur un <g> SVG), alors qu'un ajout de classe n'entre jamais en conflit avec
+   la règle de base sur le même sélecteur. */
 #label-flottant{opacity:0;pointer-events:none;transition:opacity .18s}
+#label-flottant.visible{opacity:1}
 #label-bg{fill:rgba(22,11,38,.92);stroke:rgba(255,244,226,.45);stroke-width:1.5}
 #label-text{font-family:var(--font-display);font-weight:600;font-size:16px;fill:var(--cream);text-anchor:middle;dominant-baseline:middle}
 
@@ -1970,18 +1976,58 @@ const INFO = {
 
 function speakText(id){ const z = INFO[id]; return `${z.n}. ${z.t}`; }
 
-/* Étiquette flottante : repositionnée via getBoundingClientRect + getScreenCTM
-   plutôt que getBBox seul, pour obtenir directement le rectangle VISIBLE dans
-   l'espace du viewBox (donc déjà réduit par un éventuel clip-path), et pour
-   éviter l'ambiguïté du référentiel local de getBBox() face aux <use>/transform.
-   clamp() dans le viewBox 900×560 pour les zones proches des bords. */
+/* getBoundingClientRect()/getBBox() ignorent TOUJOURS le clip-path (c'est le
+   comportement standard : le clip est un effet de peinture, pas une réduction
+   de boîte englobante — vérifié en navigateur : pour #c-magma, dont la forme
+   non découpée descend jusqu'à y=620, le rect obtenu dépasse largement la
+   poche visible). Pour approcher la zone VRAIMENT visible d'une zone sous
+   clip-path (elle-même ou un ancêtre, ex. c-magma / c-strates-lave), on clone
+   temporairement la forme de découpe comme sibling rendu (opacity:0, retiré
+   immédiatement après lecture) pour obtenir SON rect dans le même espace, puis
+   on intersecte les deux rects. Approximation : si la forme de clip contient
+   plusieurs enfants (ex. clip-c-dike), on prend l'union de leurs rects avant
+   d'intersecter — suffisant pour positionner une étiquette, pas pour un rendu
+   pixel-perfect. */
+function clipShapeClientRect(clipPathAttr, hostNode){
+  const m = /#([\w-]+)/.exec(clipPathAttr);
+  const clipPathEl = m && document.getElementById(m[1]);
+  if (!clipPathEl || !clipPathEl.children.length) return null;
+  const tempG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  tempG.style.opacity = "0";
+  [...clipPathEl.children].forEach(child => tempG.appendChild(child.cloneNode(true)));
+  hostNode.appendChild(tempG);
+  const r = tempG.getBoundingClientRect();
+  hostNode.removeChild(tempG);
+  return (r.width > 0 && r.height > 0) ? r : null;
+}
+function intersectRects(a, b){
+  const left = Math.max(a.left, b.left), top = Math.max(a.top, b.top);
+  const right = Math.min(a.right, b.right), bottom = Math.min(a.bottom, b.bottom);
+  if (right <= left || bottom <= top) return a;         // pas de recouvrement : on garde le rect d'origine
+  return new DOMRect(left, top, right - left, bottom - top);
+}
+function visibleClientRect(el){
+  let rect = el.getBoundingClientRect();
+  for (let node = el; node && node.tagName !== "svg"; node = node.parentElement){
+    const clipAttr = node.getAttribute && node.getAttribute("clip-path");
+    if (clipAttr){
+      const clipRect = clipShapeClientRect(clipAttr, node);
+      if (clipRect) rect = intersectRects(rect, clipRect);
+    }
+  }
+  return rect;
+}
+
+/* Étiquette flottante : positionnée via visibleClientRect() + getScreenCTM
+   (conversion pixels écran → coordonnées du viewBox). clamp() dans le viewBox
+   900×560 pour les zones proches des bords. */
 function showLabel(id, el){
   const z = INFO[id];
   const svg = $("#volcan"), g = $("#label-flottant"), txt = $("#label-text"), bg = $("#label-bg");
   const ctm = svg.getScreenCTM();
   if (!ctm) return;                                   // svg pas encore rendu (peu probable)
   const inv = ctm.inverse();
-  const r = el.getBoundingClientRect();
+  const r = visibleClientRect(el);
   const p1 = new DOMPoint(r.left, r.top).matrixTransform(inv);
   const p2 = new DOMPoint(r.right, r.bottom).matrixTransform(inv);
   const bx = Math.min(p1.x, p2.x), by = Math.min(p1.y, p2.y);
@@ -1995,12 +2041,22 @@ function showLabel(id, el){
   bg.setAttribute("x", x); bg.setAttribute("y", y);
   bg.setAttribute("width", w); bg.setAttribute("height", h);
   txt.setAttribute("x", x + w / 2); txt.setAttribute("y", y + h / 2);
-  g.style.opacity = 1;
+  g.classList.add("visible");                          // classe, pas style.opacity : cf. commentaire CSS de #label-flottant
 }
 
 function showInfo(id, el){
   const z = INFO[id]; if (!z) return;
   el = el || document.getElementById(id);
+  // p-seisme, c-panache, c-bombes, c-fontaine, c-coulee restent dans le DOM avec
+  // opacity:0 à certains temps mais interceptent quand même les clics (Task 6 pilote
+  // leur opacité en style inline). Un enfant ne doit pas déclencher l'explication
+  // d'une zone qu'il ne voit pas → on ignore l'appel si elle est effectivement
+  // invisible. Le garde vit ICI (pas seulement dans le listener de clic) pour
+  // tenir quel que soit l'appelant — y compris le futur mini-jeu de la Task 10,
+  // qui pourra appeler showInfo(id) directement sans passer par un événement DOM.
+  // pointer-events:none statique est volontairement exclu de ces zones : elles
+  // doivent rester cliquables dès qu'elles redeviennent visibles.
+  if (el && parseFloat(getComputedStyle(el).opacity) < .05) return;
   currentId = id;
   $("#infoEmoji").textContent = z.em;
   $("#infoTitle").textContent = z.n;
@@ -2016,19 +2072,9 @@ function showInfo(id, el){
   say(speakText(id));
 }
 
-function handleZoneActivate(el){
-  // p-seisme, c-panache, c-bombes, c-fontaine, c-coulee restent dans le DOM avec
-  // opacity:0 à certains temps mais interceptent quand même les clics (Task 6 pilote
-  // leur opacité en style inline). Un enfant ne doit pas déclencher l'explication
-  // d'une zone qu'il ne voit pas → on ignore le clic si elle est effectivement
-  // invisible. pointer-events:none statique est volontairement exclu : le mini-jeu
-  // de la Task 10 doit pouvoir cliquer ces zones dès qu'elles redeviennent visibles.
-  if (parseFloat(getComputedStyle(el).opacity) < .05) return;
-  showInfo(el.id, el);
-}
 $$(".zone").forEach(z => {
-  z.addEventListener("click", () => handleZoneActivate(z));
-  z.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); handleZoneActivate(z); } });
+  z.addEventListener("click", () => showInfo(z.id, z));
+  z.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); showInfo(z.id, z); } });
 });
 $("#zones").addEventListener("click", () => {
   document.body.classList.add("show-zones");
