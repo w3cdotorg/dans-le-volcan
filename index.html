@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dans mon volcan — petit explorateur du volcan</title>
+<meta name="description" content="Petit explorateur du volcan pour les enfants : dehors, dedans, les profondeurs, et l'histoire d'une éruption, racontée à voix haute.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DANS MON VOLCAN — mini-explorateur pour les 4-5 ans
+   Petit frère de « Dans mon corps » : même esthétique de
+   planétarium et de cartes en verre dépoli, mais réchauffée
+   (lueur de magma, braises flottantes).
+   Un seul fichier, aucune dépendance obligatoire.
+   ============================================================ */
+
+:root{
+  /* fond planétarium réchauffé */
+  --night-1:#160b26;
+  --night-2:#251043;
+  --night-3:#341a55;
+  --cream:#fff4e2;
+  --cream-soft:#d8cdf0;
+
+  /* magma / braises */
+  --lave:#ff5a2a;
+  --magma:#ff7a3c;
+  --braise:#ffb15c;
+  --cendre:#8b8296;
+
+  /* couleurs des 3 vues (coupe) */
+  --c-dehors:#7ed98a;
+  --c-dedans:#ffb15c;
+  --c-prof:#ff6f7d;
+  --accent:var(--c-dehors);
+
+  /* décor */
+  --skyday:#8fd3ff;
+  --foret:#3f9d5a;
+  --roche:#6b5b73;
+  --roche-sombre:#3d3247;
+
+  --pad:clamp(12px, 2.2vw, 26px);
+  --r-lg:34px;
+  --r-md:22px;
+
+  --font-display:"Fredoka","Chalkboard SE","Comic Sans MS",system-ui,sans-serif;
+  --font-ui:"Baloo 2","Chalkboard SE","Comic Sans MS",system-ui,sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font-ui);
+  color:var(--cream);
+  background:
+    radial-gradient(120% 70% at 50% 4%, var(--night-3) 0%, transparent 62%),
+    radial-gradient(90% 55% at 8% 88%, #3a1a4e 0%, transparent 55%),
+    radial-gradient(110% 65% at 50% 108%, #ff5a2a22 0%, transparent 62%),
+    linear-gradient(175deg, var(--night-1), var(--night-2) 55%, #110a20);
+  background-attachment:fixed;
+  min-height:100%;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* grain + étoiles (copie du pattern du corps) */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 20% 18%, rgba(255,255,255,.75) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 72% 12%, rgba(255,255,255,.6) 50%, transparent 51%),
+    radial-gradient(1.8px 1.8px at 86% 44%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1.3px 1.3px at 12% 62%, rgba(255,255,255,.55) 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 46% 86%, rgba(255,255,255,.45) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 62% 68%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 33% 34%, rgba(255,255,255,.4) 50%, transparent 51%);
+  opacity:.9;
+  animation:twinkle 5s ease-in-out infinite;
+}
+@keyframes twinkle{0%,100%{opacity:.85}50%{opacity:.45}}
+
+/* braises flottantes : montent en oscillant */
+.braises{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.braises i{
+  position:absolute;bottom:-60px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #fff2d8, var(--braise) 55%, var(--lave) 90%);
+  box-shadow:0 0 8px 2px rgba(255,122,60,.55);
+  animation:monte linear infinite;
+}
+@keyframes monte{
+  0%{transform:translate(0,0) scale(.6);opacity:0}
+  8%{opacity:.9}
+  25%{transform:translate(10px,-25vh) scale(.8)}
+  50%{transform:translate(-9px,-55vh) scale(.95)}
+  75%{transform:translate(10px,-85vh) scale(1.05)}
+  100%{transform:translate(-5px,-115vh) scale(1.1);opacity:0}
+}
+
+/* ------------------------------- en-tête */
+header{
+  position:relative;z-index:2;
+  padding:clamp(14px,3vw,30px) var(--pad) 0;
+  text-align:center;
+}
+h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(2rem,6.4vw,4.1rem);
+  line-height:.98;
+  margin:.2em 0 .1em;
+  letter-spacing:-.01em;
+  background:linear-gradient(178deg,#fff9ef,#ffcf8f 55%,var(--lave));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 24px rgba(255,120,60,.32));
+}
+h1 .volcan-em{display:inline-block;animation:secousse 2.6s ease-in-out infinite;transform-origin:50% 85%}
+@keyframes secousse{0%,55%,100%{transform:rotate(0) translateY(0)}62%{transform:rotate(-4deg) translateY(-1px)}70%{transform:rotate(3deg)}78%{transform:rotate(-2deg) translateY(1px)}86%{transform:rotate(0)}}
+.tagline{margin:.2em auto 0;max-width:46ch;color:var(--cream-soft);font-size:clamp(.95rem,2.1vw,1.15rem);font-weight:500}
+
+/* ------------------------------- structure */
+.wrap{
+  position:relative;z-index:2;
+  max-width:1240px;margin:0 auto;
+  padding:var(--pad);
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);
+  gap:clamp(14px,2.4vw,30px);
+  align-items:start;
+}
+@media (max-width:900px){ .wrap{grid-template-columns:1fr} }
+
+.card{
+  background:linear-gradient(168deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r-lg);
+  padding:clamp(14px,2.2vw,22px);
+  backdrop-filter:blur(10px);
+  box-shadow:0 22px 50px -28px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.16);
+}
+
+/* ------------------------------- scène (le volcan) */
+.scene{display:flex;flex-direction:column;gap:clamp(10px,2vw,16px)}
+.svgbox{
+  position:relative;
+  margin:2px auto 0;width:100%;
+  border-radius:var(--r-md);
+  overflow:hidden;
+  background:radial-gradient(60% 45% at 50% 100%, rgba(255,140,70,.18), transparent 70%);
+}
+svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margin:0 auto}
+@media (max-width:900px){ svg#volcan{max-height:52vh} }
+
+/* ------------------------------- curseur temps */
+.time-control{display:flex;flex-direction:column;gap:8px}
+#time{width:100%}
+.moments{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.moment{
+  cursor:pointer;font-family:var(--font-display);font-weight:600;
+  display:flex;flex-direction:column;align-items:center;gap:.15em;
+  padding:.5em .15em .45em;border-radius:16px;
+  border:2px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.05);
+  color:var(--cream);font-size:clamp(.6rem,1.4vw,.82rem);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1), background .25s, border-color .25s, box-shadow .25s;
+  line-height:1.05;text-align:center;
+}
+.moment .em{font-size:clamp(1.2rem,3vw,1.6rem);line-height:1;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+.moment:hover{transform:translateY(-3px)}
+.moment[data-time="0"]{
+  background:color-mix(in srgb, var(--lave) 28%, transparent);
+  border-color:var(--lave);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--lave) 16%, transparent);
+}
+
+/* ------------------------------- panneau info / commandes */
+.panel{display:flex;flex-direction:column;gap:clamp(12px,2vw,18px)}
+
+.cuts{display:flex;align-items:center;gap:16px}
+.pills{display:flex;flex-direction:column;gap:8px;flex:1}
+.pill{
+  cursor:pointer;font-family:var(--font-display);font-weight:600;
+  display:flex;align-items:center;gap:.55em;
+  padding:.5em .9em;border-radius:999px;
+  border:2px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.05);
+  color:var(--cream);font-size:clamp(.82rem,1.7vw,.98rem);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1), background .25s, border-color .25s, box-shadow .25s;
+}
+.pill .em{font-size:1.3em;line-height:1}
+.pill:hover{transform:translateX(3px)}
+.pill[data-cut="0"]{
+  background:color-mix(in srgb, var(--c-dehors) 28%, transparent);
+  border-color:var(--c-dehors);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--c-dehors) 16%, transparent);
+}
+
+/* ------------------------------- sliders (gros pouces) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:22px;border-radius:999px;
+  background:linear-gradient(90deg,var(--braise),var(--lave));
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.35);
+}
+input[type=range]::-moz-range-track{
+  height:22px;border-radius:999px;
+  background:linear-gradient(90deg,var(--braise),var(--lave));
+  border:1px solid rgba(255,255,255,.28);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:38px;height:38px;margin-top:-9px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #fff, #ffe6bd 55%, var(--lave));
+  border:3px solid #fff;
+  box-shadow:0 6px 18px -4px rgba(0,0,0,.7);
+  transition:transform .15s;
+}
+input[type=range]::-moz-range-thumb{
+  width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #fff, #ffe6bd 55%, var(--lave));
+  border:3px solid #fff;box-shadow:0 6px 18px -4px rgba(0,0,0,.7);
+}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14)}
+input[type=range]:focus-visible{outline:3px solid var(--braise);outline-offset:6px;border-radius:999px}
+
+.cut-wrap{width:44px;height:200px;margin:4px auto 0;display:flex;align-items:center;justify-content:center}
+#cut{width:200px;height:38px;transform:rotate(90deg)}
+#cut::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--c-dehors),var(--c-dedans) 50%,var(--c-prof))}
+#cut::-moz-range-track{background:linear-gradient(90deg,var(--c-dehors),var(--c-dedans) 50%,var(--c-prof))}
+
+/* ------------------------------- carte info */
+.info{position:relative;overflow:hidden;min-height:170px;display:flex;flex-direction:column}
+.info::after{
+  content:"";position:absolute;inset:-40% -30% auto auto;width:70%;aspect-ratio:1;
+  background:radial-gradient(circle, color-mix(in srgb,var(--accent) 42%, transparent), transparent 68%);
+  pointer-events:none;
+}
+.info .big{font-size:clamp(2.4rem,6.4vw,3.2rem);line-height:1;filter:drop-shadow(0 6px 12px rgba(0,0,0,.45))}
+.info h2{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(1.3rem,3.6vw,1.85rem);line-height:1.05;margin:.28em 0 .12em;
+  color:#fff;
+}
+.info p{margin:.4em 0 0;font-size:clamp(.95rem,2vw,1.05rem);line-height:1.5;color:var(--cream-soft);font-weight:500}
+
+/* ------------------------------- boutons */
+.tools{display:flex;flex-direction:column;gap:12px}
+.btnbar{display:flex;flex-wrap:wrap;gap:10px}
+.btn{
+  font-family:var(--font-display);font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.45em;
+  padding:.55em 1.1em;border-radius:999px;border:2px solid transparent;
+  font-size:clamp(.85rem,1.8vw,1rem);
+  background:linear-gradient(160deg,#fff6e2,#ffab6b);color:#3d220b;
+  box-shadow:0 10px 24px -12px rgba(255,171,107,.95);
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1), filter .2s;
+}
+.btn:hover{transform:translateY(-3px) scale(1.03)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn.ghostbtn{background:rgba(255,255,255,.08);color:var(--cream);border-color:rgba(255,255,255,.24);box-shadow:none}
+.btn.play{background:linear-gradient(160deg,#ffd9a8,var(--lave));color:#2e0e02;box-shadow:0 10px 24px -12px rgba(255,90,42,.95)}
+.btn[aria-pressed="false"]{filter:grayscale(.5) brightness(.9)}
+
+footer{
+  position:relative;z-index:2;text-align:center;
+  padding:6px var(--pad) 30px;color:#b09bd6;font-size:.86rem;font-weight:500;
+}
+
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
+</style>
+</head>
+<body>
+
+<div class="braises" aria-hidden="true">
+  <i style="left:4%;width:7px;height:7px;animation-duration:9s;animation-delay:0s"></i>
+  <i style="left:14%;width:5px;height:5px;animation-duration:7.5s;animation-delay:1.2s"></i>
+  <i style="left:24%;width:9px;height:9px;animation-duration:10.5s;animation-delay:.4s"></i>
+  <i style="left:38%;width:6px;height:6px;animation-duration:8.2s;animation-delay:2.6s"></i>
+  <i style="left:52%;width:8px;height:8px;animation-duration:9.6s;animation-delay:1.8s"></i>
+  <i style="left:64%;width:5px;height:5px;animation-duration:7s;animation-delay:.9s"></i>
+  <i style="left:76%;width:10px;height:10px;animation-duration:11s;animation-delay:3.1s"></i>
+  <i style="left:86%;width:6px;height:6px;animation-duration:8.6s;animation-delay:2s"></i>
+  <i style="left:94%;width:7px;height:7px;animation-duration:9.2s;animation-delay:.6s"></i>
+</div>
+
+<header>
+  <h1>Dans mon volcan <span class="volcan-em" aria-hidden="true">🌋</span></h1>
+  <p class="tagline">Tourne les deux boutons&nbsp;: découvre le volcan et fais-le entrer en éruption&nbsp;!</p>
+</header>
+
+<div class="wrap">
+
+  <!-- ======================= SCÈNE ======================= -->
+  <main class="scene card" aria-label="Le volcan">
+    <div class="svgbox">
+      <svg id="volcan" viewBox="0 0 900 560" role="img" aria-label="Le volcan">
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#8fd3ff"/>
+            <stop offset="1" stop-color="#fff4e2"/>
+          </linearGradient>
+        </defs>
+        <!-- placeholder : remplacé en Task 2 -->
+        <rect x="0" y="0" width="900" height="560" fill="url(#skyGrad)"/>
+        <polygon points="450,110 720,340 180,340" fill="#6b5b73"/>
+      </svg>
+    </div>
+
+    <div class="time-control">
+      <input type="range" id="time" min="0" max="400" value="0" aria-label="Faire avancer l'éruption">
+      <div class="moments" role="group" aria-label="Les moments de l'éruption">
+        <button type="button" class="moment" data-time="0"><span class="em">🌙</span><span class="lbl">Endormi</span></button>
+        <button type="button" class="moment" data-time="1"><span class="em">😮</span><span class="lbl">Le réveil</span></button>
+        <button type="button" class="moment" data-time="2"><span class="em">🌋</span><span class="lbl">L'éruption&nbsp;!</span></button>
+        <button type="button" class="moment" data-time="3"><span class="em">🔥</span><span class="lbl">Les coulées</span></button>
+        <button type="button" class="moment" data-time="4"><span class="em">🌱</span><span class="lbl">Le repos</span></button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================= PANNEAU ======================= -->
+  <aside class="panel">
+
+    <div class="card cuts">
+      <div class="pills" role="group" aria-label="Choisir la vue">
+        <button type="button" class="pill" data-cut="0"><span class="em">🏞️</span><span class="lbl">Dehors</span></button>
+        <button type="button" class="pill" data-cut="1"><span class="em">🌋</span><span class="lbl">Dedans</span></button>
+        <button type="button" class="pill" data-cut="2"><span class="em">🌍</span><span class="lbl">Les profondeurs</span></button>
+      </div>
+      <div class="cut-wrap">
+        <input type="range" id="cut" min="0" max="200" value="0" aria-label="Choisir la vue">
+      </div>
+    </div>
+
+    <div class="card info" id="info">
+      <div class="big" id="infoEmoji">🌋</div>
+      <h2 id="infoTitle">Touche le volcan&nbsp;!</h2>
+      <p id="infoText">Clique sur une partie du volcan pour découvrir ce qu'elle cache.</p>
+    </div>
+
+    <div class="card tools">
+      <div class="btnbar">
+        <button type="button" id="say" class="btn">🔊 Réécouter</button>
+        <button type="button" id="sound" class="btn ghostbtn" aria-pressed="false">🔇 Son coupé</button>
+        <button type="button" id="zones" class="btn ghostbtn">✨ Montrer les zones</button>
+        <button type="button" id="loupeBtn" class="btn ghostbtn">🔍 La loupe</button>
+        <button type="button" id="jeu" class="btn play">🎯 Le jeu</button>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<footer>Fait avec ❤️ pour Raphaël</footer>
+
+</body>
+</html>
