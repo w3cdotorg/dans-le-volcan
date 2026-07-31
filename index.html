@@ -300,6 +300,87 @@ footer{
   100%{opacity:0;transform:translate(-4px,-52px) scale(1.2)}
 }
 
+/* ------------------------------- les profondeurs (vue Profondeurs)
+   Le manteau coule au ralenti (convection + ondulations), la zone de
+   fusion respire, et les gouttes de #p-flux remontent le conduit. */
+
+/* les deux grandes cellules de convection : elles enflent et se rétractent */
+#p-manteau > ellipse{transform-box:fill-box;transform-origin:50% 50%;animation:p-convection 15s ease-in-out infinite}
+#p-manteau > ellipse:nth-of-type(2){animation-duration:19s;animation-delay:-6s}
+@keyframes p-convection{
+  0%,100%{opacity:.8;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.09)}
+}
+
+/* ondulations : de longues nappes de roche molle qui dérivent */
+#p-manteau .onde{transform-box:fill-box;transform-origin:50% 50%;animation:p-onde 18s ease-in-out infinite}
+#p-manteau .onde:nth-of-type(2){animation-duration:23s;animation-delay:-7s}
+#p-manteau .onde:nth-of-type(3){animation-duration:27s;animation-delay:-13s}
+#p-manteau .onde:nth-of-type(4){animation-duration:21s;animation-delay:-4s}
+#p-manteau .onde:nth-of-type(5){animation-duration:25s;animation-delay:-9s}
+@keyframes p-onde{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(18px,-8px)}
+}
+
+/* la zone de fusion : la lueur respire, les perles de magma frémissent */
+#p-fusion .lueur{transform-box:fill-box;transform-origin:50% 50%;animation:p-fusion 5.5s ease-in-out infinite}
+#p-fusion .lueur:nth-of-type(2){animation-duration:7.4s;animation-delay:-2.2s}
+@keyframes p-fusion{
+  0%,100%{opacity:.85;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.07)}
+}
+/* les perles servent deux fois : dans la zone de fusion et, plus rares,
+   au milieu du manteau. Les retards sont comptés dans chaque groupe. */
+#g-prof .perle{transform-box:fill-box;transform-origin:50% 50%;animation:p-perle 4.4s ease-in-out infinite}
+#g-prof .perle:nth-of-type(2){animation-duration:5.6s;animation-delay:-1.4s}
+#g-prof .perle:nth-of-type(3){animation-duration:6.4s;animation-delay:-2.8s}
+#g-prof .perle:nth-of-type(4){animation-duration:4.9s;animation-delay:-.7s}
+#g-prof .perle:nth-of-type(5){animation-duration:6s;animation-delay:-3.4s}
+#g-prof .perle:nth-of-type(6){animation-duration:5.2s;animation-delay:-1.9s}
+#g-prof .perle:nth-of-type(7){animation-duration:6.8s;animation-delay:-4.1s}
+#g-prof .perle:nth-of-type(8){animation-duration:4.6s;animation-delay:-2.3s}
+@keyframes p-perle{
+  0%,100%{opacity:.85;transform:translate(0,0) scale(.94)}
+  50%{opacity:1;transform:translate(2px,-6px) scale(1.08)}
+}
+
+/* la remontée : ~2.5s par goutte au repos. La durée passe par --flux-d,
+   et les 6 retards en sont des fractions : la vue peut donc accélérer
+   tout le train de gouttes en ne changeant qu'une valeur. */
+#p-flux{--flux-d:2.5s}
+#p-flux .goutte{
+  transform-box:fill-box;transform-origin:50% 50%;
+  animation:p-flux var(--flux-d) linear infinite;
+  animation-delay:calc(var(--i) * var(--flux-d) / -6);
+}
+@keyframes p-flux{
+  0%{opacity:0;transform:translate(0,8px) scale(.5)}
+  15%{opacity:1;transform:translate(1px,0) scale(1)}
+  80%{opacity:.95}
+  100%{opacity:0;transform:translate(12px,-110px) scale(.7)}
+}
+
+/* les éclats de séisme : ils clignotent chacun à son rythme */
+#p-seisme .eclat{transform-box:fill-box;transform-origin:50% 55%;animation:p-eclat 2.1s ease-in-out infinite}
+#p-seisme > g:nth-of-type(2) .eclat{animation-duration:1.7s;animation-delay:-.6s}
+#p-seisme > g:nth-of-type(3) .eclat{animation-duration:2.5s;animation-delay:-1.2s}
+@keyframes p-eclat{
+  0%,100%{opacity:.15;transform:scale(.82)}
+  16%{opacity:1;transform:scale(1.16)}
+  42%{opacity:.45;transform:scale(.96)}
+}
+
+/* le filet de fumée du volcan miniature (coordonnées du groupe réduit :
+   les distances y sont ~5,7× plus grandes qu'à l'écran) */
+#p-volcan .puff{transform-box:fill-box;transform-origin:50% 100%;animation:p-puff 7s ease-in-out infinite}
+#p-volcan .puff:nth-of-type(2){animation-duration:9.5s;animation-delay:-4s}
+@keyframes p-puff{
+  0%{opacity:0;transform:translate(0,10px) scale(.6)}
+  30%{opacity:.75}
+  100%{opacity:0;transform:translate(-34px,-96px) scale(1.5)}
+}
+
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
 </style>
 </head>
@@ -468,6 +549,66 @@ footer{
             <stop offset="1" stop-color="#a8321a"/>
           </radialGradient>
 
+          <!-- ============ dégradés (préfixe grad-p- : vue Profondeurs) ============ -->
+          <!-- la vue a sa propre bande de ciel : mêmes bleus que grad-d-ciel, pour
+               que le fondu Dedans → Profondeurs ne fasse pas sauter le haut -->
+          <linearGradient id="grad-p-ciel" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#79c7ff"/>
+            <stop offset=".55" stop-color="#a6dbfb"/>
+            <stop offset="1" stop-color="#e4f2fd"/>
+          </linearGradient>
+          <linearGradient id="grad-p-mer" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#8ed0f5"/>
+            <stop offset=".45" stop-color="#3f93cf"/>
+            <stop offset="1" stop-color="#1d5d95"/>
+          </linearGradient>
+          <!-- LE spectacle de la vue : rouge sombre en haut, pourpre chaleureux en bas -->
+          <linearGradient id="grad-p-manteau" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c4432c"/>
+            <stop offset=".2" stop-color="#a52a35"/>
+            <stop offset=".52" stop-color="#82204a"/>
+            <stop offset=".8" stop-color="#5b1a4d"/>
+            <stop offset="1" stop-color="#3b1342"/>
+          </linearGradient>
+          <!-- cellules de convection : la roche molle tourne très lentement -->
+          <radialGradient id="grad-p-convection" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#ff9b4a" stop-opacity=".4"/>
+            <stop offset=".55" stop-color="#ff5a2a" stop-opacity=".15"/>
+            <stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/>
+          </radialGradient>
+          <!-- la croûte est une roche CHAUDE (brune) : elle se détache ainsi des
+               plaques, qui restent gris-violet -->
+          <linearGradient id="grad-p-croute" x1="0" y1="0" x2=".12" y2="1">
+            <stop offset="0" stop-color="#b09a86"/>
+            <stop offset=".5" stop-color="#8d7562"/>
+            <stop offset="1" stop-color="#6b5750"/>
+          </linearGradient>
+          <linearGradient id="grad-p-plaque-cont" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#6b5b73"/>
+            <stop offset=".5" stop-color="#514362"/>
+            <stop offset="1" stop-color="#382d49"/>
+          </linearGradient>
+          <!-- la roche qui fond juste au-dessus de la plaque plongeante -->
+          <radialGradient id="grad-p-fusion" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#fff2c0" stop-opacity=".95"/>
+            <stop offset=".3" stop-color="#ffa24a" stop-opacity=".7"/>
+            <stop offset=".66" stop-color="#ff6f2e" stop-opacity=".3"/>
+            <stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/>
+          </radialGradient>
+          <!-- gouttes de magma : le reflet est dans le dégradé, une seule forme suffit -->
+          <radialGradient id="grad-p-magma" cx=".34" cy=".28" r=".82">
+            <stop offset="0" stop-color="#fff8dc"/>
+            <stop offset=".3" stop-color="#ffcf7a"/>
+            <stop offset=".68" stop-color="#ff8a42"/>
+            <stop offset="1" stop-color="#e8431f"/>
+          </radialGradient>
+          <!-- le volcan miniature : mêmes arrêts que grad-d-cone, en plus court -->
+          <linearGradient id="grad-p-volcan" x1="1" y1="0" x2=".1" y2=".8">
+            <stop offset="0" stop-color="#b3a0ad"/>
+            <stop offset=".45" stop-color="#8b7889"/>
+            <stop offset="1" stop-color="#584a63"/>
+          </linearGradient>
+
           <!-- ============ découpes (vue Dedans) ============ -->
           <!-- la silhouette EXACTE de #d-cone : les strates s'y arrêtent net -->
           <clipPath id="clip-c-cone">
@@ -487,6 +628,36 @@ footer{
           <!-- la poche de la chambre : garde le magma dedans quand il monte -->
           <clipPath id="clip-c-chambre">
             <path d="M300 428 C296 392 322 368 362 366 C396 356 436 356 470 364 C520 354 592 372 600 420 C610 466 578 512 520 522 C470 532 410 530 366 518 C318 504 302 468 300 428 Z"/>
+          </clipPath>
+
+          <!-- ============ silhouettes de la vue Profondeurs ============
+               Chacune sert DEUX fois (une fois remplie, une fois en découpe) :
+               elle est définie ici une seule fois pour que les deux usages ne
+               puissent pas diverger. -->
+          <!-- la croûte continentale : elle s'affine jusqu'à la fosse (272,110) -->
+          <path id="p-croute-cont" d="M272 110 C306 92 344 72 386 64 L900 64 L900 96 L386 96 C348 102 312 110 272 110 Z"/>
+          <!-- la croûte océanique : fine, posée sur le dos de la plaque -->
+          <path id="p-croute-oce" d="M-20 96 L200 96 C226 96 248 99 272 110 L266 122 C244 112 222 108 200 108 L-20 108 Z"/>
+          <!-- la lithosphère continentale : un coin épais à droite, effilé sur la fosse -->
+          <path id="p-cont-forme" d="M272 110 C306 92 344 72 386 64 L900 64 L900 208 C790 214 680 214 610 206 C530 196 468 180 414 158 C370 140 320 124 272 110 Z"/>
+          <!-- l'axe de la langue plongeante : tracée deux fois (bord clair large,
+               puis cœur sombre plus fin) pour obtenir une plaque à liseré -->
+          <path id="p-langue" fill="none" stroke-linecap="round"
+                d="M216 122 C250 124 274 136 296 160 C330 200 364 250 398 304 C438 366 492 440 538 494"/>
+
+          <!-- ============ découpes (vue Profondeurs) ============ -->
+          <clipPath id="clip-p-croute">
+            <use href="#p-croute-cont"/>
+            <use href="#p-croute-oce"/>
+          </clipPath>
+          <clipPath id="clip-p-cont">
+            <use href="#p-cont-forme"/>
+          </clipPath>
+          <!-- le COIN DE MANTEAU : entre la base de la plaque continentale (dessus)
+               et le dos de la plaque plongeante (dessous). La lueur de fusion y est
+               découpée, donc elle reste toujours AU-DESSUS de la plaque qui plonge. -->
+          <clipPath id="clip-p-coin">
+            <path d="M288 118 C340 134 380 148 414 158 C468 180 530 196 600 206 L640 320 L560 480 C520 424 460 340 417 291 C392 252 366 214 340 179 C322 154 306 132 288 118 Z"/>
           </clipPath>
 
           <!-- ============ formes réutilisées ============ -->
@@ -519,6 +690,12 @@ footer{
           <!-- oiseau en « accent » -->
           <g id="d-oiseau">
             <path d="M-11 0 Q-5.5 -7 0 -1.5 Q5.5 -7 11 0" fill="none" stroke="#4a4159" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          <!-- éclair de séisme : le <use> n'a pas de transform à lui, l'animation
+               CSS peut donc s'en servir librement (le placement est sur le <g> parent) -->
+          <g id="p-eclair">
+            <path d="M1 -12 L-7 2 L-1.5 2 L-3.5 12 L7 -3 L1 -3 Z"
+                  fill="#fff3c4" stroke="#ffb15c" stroke-width="1.6" stroke-linejoin="round"/>
           </g>
           <!-- les 3 langues de coulée : servent en orange (éruption) puis en noir (refroidi) -->
           <g id="d-langues">
@@ -1199,6 +1376,301 @@ footer{
               <circle cx="472" cy="40" r="12"/>
               <circle cx="406" cy="60" r="11"/>
             </g>
+          </g>
+
+        </g>
+
+        <!-- ==================================================================
+             LES PROFONDEURS — scène autonome : elle recouvre tout le viewBox
+             (elle a sa propre bande de ciel, #g-ciel s'efface au fondu).
+
+             Orientation scientifique : la plaque OCÉANIQUE (gauche, sombre et
+             fine) plonge SOUS la plaque CONTINENTALE (droite, épaisse), et la
+             zone de fusion se trouve AU-DESSUS de la plaque plongeante, dans le
+             coin de manteau. La remontée débouche pile sous le volcan miniature.
+
+             Repères verticaux : surface du continent y=64, niveau de la mer
+             y=72, plancher océanique y=96, base de la croûte y=96, base de la
+             lithosphère continentale y=208, manteau au-delà.
+             L'ordre de dessin porte la lecture : la langue plongeante est posée
+             AVANT la plaque continentale, qui la recouvre — donc elle passe
+             visiblement dessous.
+             ================================================================== -->
+        <g id="g-prof" opacity="0">
+
+          <!-- ---------- la bande de ciel ---------- -->
+          <rect x="0" y="0" width="900" height="124" fill="url(#grad-p-ciel)"/>
+          <!-- même soleil que dehors : on réutilise son dégradé -->
+          <circle cx="842" cy="14" r="34" fill="url(#grad-d-soleil)"/>
+          <circle cx="842" cy="14" r="14" fill="#fff8dc" opacity=".92"/>
+          <g fill="#ffffff" opacity=".9">
+            <ellipse cx="134" cy="28" rx="19" ry="11"/>
+            <ellipse cx="154" cy="22" rx="16" ry="13"/>
+            <ellipse cx="172" cy="29" rx="13" ry="9"/>
+            <rect x="114" y="27" width="70" height="10" rx="5"/>
+          </g>
+          <g fill="#ffffff" opacity=".62">
+            <ellipse cx="286" cy="24" rx="14" ry="8"/>
+            <ellipse cx="302" cy="19" rx="12" ry="10"/>
+            <ellipse cx="317" cy="25" rx="10" ry="7"/>
+            <rect x="273" y="23" width="55" height="8" rx="4"/>
+          </g>
+
+          <!-- ---------- l'océan : il s'arrête là où le continent émerge ---------- -->
+          <g id="p-ocean" class="zone" tabindex="0" role="button">
+            <path d="M-20 72 L355 72 C325 82 298 96.5 272 110 C248 99 226 96 200 96 L-20 96 Z"
+                  fill="url(#grad-p-mer)"/>
+            <!-- crêtes de vagues -->
+            <g fill="none" stroke="#eaf7ff" stroke-linecap="round" opacity=".7">
+              <path d="M20 78 q10 -5 20 0 q10 5 20 0" stroke-width="2.6"/>
+              <path d="M106 76 q10 -5 20 0 q10 5 20 0" stroke-width="2.4"/>
+              <path d="M198 79 q10 -5 20 0 q10 5 20 0" stroke-width="2.6"/>
+              <path d="M288 75 q9 -4 18 0" stroke-width="2.2"/>
+            </g>
+            <!-- deux petits poissons -->
+            <g fill="#dff2ff" opacity=".6">
+              <path d="M78 88 C84 83 94 83 100 88 C94 93 84 93 78 88 Z M78 88 L70 84 L70 92 Z"/>
+              <path d="M228 90 C233 86 241 86 246 90 C241 94 233 94 228 90 Z M228 90 L221 87 L221 93 Z"/>
+            </g>
+          </g>
+
+          <!-- ---------- le manteau : la roche brûlante et molle ---------- -->
+          <g id="p-manteau" class="zone" tabindex="0" role="button">
+            <!-- il démarre à y=112 : partout au-dessus, croûte et plaques le
+                 recouvrent, donc aucune couture n'apparaît -->
+            <rect x="0" y="112" width="900" height="448" fill="url(#grad-p-manteau)"/>
+            <!-- les deux grandes cellules de convection -->
+            <ellipse cx="176" cy="356" rx="216" ry="152" fill="url(#grad-p-convection)"/>
+            <ellipse cx="742" cy="416" rx="234" ry="162" fill="url(#grad-p-convection)"/>
+            <!-- ondulations lentes : la roche coule, mais au ralenti -->
+            <g class="ondes" fill="none" stroke="#ffb15c" stroke-linecap="round">
+              <path class="onde" d="M-40 178 C120 164 250 192 384 176" stroke-width="6" opacity=".14"/>
+              <path class="onde" d="M-40 250 C120 232 260 268 420 250 C560 234 720 266 940 246" stroke-width="7" opacity=".16"/>
+              <path class="onde" d="M-40 322 C140 306 300 340 460 320 C620 302 780 334 940 316" stroke-width="9" opacity=".13"/>
+              <path class="onde" d="M-40 404 C120 388 280 420 440 402 C600 384 780 414 940 398" stroke-width="8" opacity=".12"/>
+              <path class="onde" d="M-40 484 C140 468 300 498 460 480 C620 462 800 492 940 476" stroke-width="10" opacity=".11"/>
+            </g>
+            <!-- grains de roche incandescente -->
+            <g fill="#ffcf7a" opacity=".26">
+              <circle cx="86" cy="206" r="3"/>
+              <circle cx="152" cy="286" r="2.4"/>
+              <circle cx="62" cy="352" r="3.4"/>
+              <circle cx="212" cy="438" r="2.8"/>
+              <circle cx="118" cy="504" r="3.2"/>
+              <circle cx="330" cy="392" r="2.6"/>
+              <circle cx="286" cy="512" r="3"/>
+              <circle cx="470" cy="536" r="2.6"/>
+              <circle cx="632" cy="286" r="3.2"/>
+              <circle cx="716" cy="352" r="2.6"/>
+              <circle cx="806" cy="264" r="3"/>
+              <circle cx="866" cy="430" r="3.4"/>
+              <circle cx="678" cy="492" r="2.8"/>
+              <circle cx="784" cy="524" r="3.2"/>
+            </g>
+            <!-- de rares gouttes de magma perdues dans la roche molle : assez
+                 discrètes pour ne pas se confondre avec la remontée -->
+            <g class="perles">
+              <ellipse class="perle" cx="146" cy="256" rx="4.5" ry="6" fill="url(#grad-p-magma)" opacity=".45"/>
+              <ellipse class="perle" cx="98" cy="454" rx="4" ry="5.5" fill="url(#grad-p-magma)" opacity=".4"/>
+              <ellipse class="perle" cx="694" cy="304" rx="4.5" ry="6" fill="url(#grad-p-magma)" opacity=".45"/>
+              <ellipse class="perle" cx="808" cy="462" rx="4" ry="5.5" fill="url(#grad-p-magma)" opacity=".4"/>
+            </g>
+          </g>
+
+          <!-- ---------- la langue plongeante : LA SUBDUCTION ----------
+               Dessinée AVANT la plaque continentale : celle-ci vient la
+               recouvrir, donc l'océanique passe visiblement DESSOUS. -->
+          <g id="p-subduction" class="zone" tabindex="0" role="button">
+            <!-- le bord clair de la plaque, puis son cœur sombre -->
+            <use href="#p-langue" stroke="#4a3f63" stroke-width="46"/>
+            <use href="#p-langue" stroke="#2a2340" stroke-width="30"/>
+            <!-- fractures : la plaque se casse en s'enfonçant -->
+            <g fill="none" stroke="#6f6090" stroke-width="2.4" opacity=".55" stroke-linecap="round">
+              <path d="M300 140 L318 172"/>
+              <path d="M352 214 L372 246"/>
+              <path d="M410 300 L432 336"/>
+              <path d="M470 396 L494 430"/>
+            </g>
+            <!-- la flèche : la plaque glisse vers le bas, comme sur un toboggan -->
+            <path d="M282 148 C316 186 350 236 384 288 C402 316 420 338 436 352"
+                  fill="none" stroke="#ffeccd" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+            <path d="M452 372 L427 360 L449 345 Z" fill="#ffeccd" opacity=".85"/>
+            <!-- la pointe de la plaque finit par fondre dans le manteau -->
+            <ellipse cx="544" cy="500" rx="34" ry="26" fill="url(#grad-p-fusion)" opacity=".45"/>
+          </g>
+
+          <!-- ---------- la plaque océanique : fine et sombre ---------- -->
+          <g id="p-plaque-oce" class="zone" tabindex="0" role="button">
+            <path d="M-20 119 L236 119" fill="none" stroke="#4a3f63" stroke-width="46"/>
+            <path d="M-20 119 L236 119" fill="none" stroke="#2a2340" stroke-width="30"/>
+            <!-- elle pousse vers la droite -->
+            <path d="M62 119 L148 119" fill="none" stroke="#ffeccd" stroke-width="6" stroke-linecap="round" opacity=".75"/>
+            <path d="M170 119 L146 111 L146 127 Z" fill="#ffeccd" opacity=".8"/>
+          </g>
+
+          <!-- ---------- la plaque continentale : épaisse, elle porte le volcan ---------- -->
+          <g id="p-plaque-cont" class="zone" tabindex="0" role="button">
+            <use href="#p-cont-forme" fill="url(#grad-p-plaque-cont)"/>
+            <g clip-path="url(#clip-p-cont)">
+              <!-- strates profondes -->
+              <g fill="none" stroke="#8f7d9a" stroke-width="2.4" opacity=".32" stroke-linecap="round">
+                <path d="M340 128 C440 152 560 172 700 180 C790 184 860 184 910 182"/>
+                <path d="M400 158 C500 180 620 196 760 202 C840 206 890 206 910 204"/>
+                <path d="M470 120 C580 128 700 132 910 130"/>
+              </g>
+              <!-- blocs de roche : des cailloux arrondis, pas des losanges -->
+              <g fill="#2f2542" opacity=".3">
+                <path d="M446 112 c8 -6 18 -3 17 4 c-1 7 -13 10 -18 5 c-3 -3 -2 -7 1 -9 z"/>
+                <path d="M556 140 c7 -5 16 -3 15 4 c-1 6 -11 9 -16 4 c-2 -3 -1 -6 1 -8 z"/>
+                <path d="M672 118 c9 -6 19 -3 18 4 c-1 8 -14 11 -19 5 c-3 -3 -2 -7 1 -9 z"/>
+                <path d="M762 158 c7 -5 16 -3 15 4 c-1 6 -12 9 -16 4 c-2 -3 -1 -6 1 -8 z"/>
+                <path d="M860 122 c8 -6 18 -3 17 4 c-1 7 -13 10 -18 5 c-3 -3 -2 -7 1 -9 z"/>
+                <path d="M614 178 c7 -5 15 -2 14 4 c-1 6 -11 8 -15 4 c-2 -3 -1 -6 1 -8 z"/>
+                <path d="M494 152 c6 -5 14 -2 13 4 c-1 5 -10 8 -14 4 c-2 -3 -1 -6 1 -8 z"/>
+              </g>
+            </g>
+            <!-- elle porte la terre où nous vivons : des montagnes et une forêt -->
+            <g>
+              <path d="M628 64 C662 40 686 22 703 20 C721 22 746 42 780 64 Z" fill="#8b7d9a"/>
+              <path d="M703 20 C712 26 722 36 734 48 C724 46 714 46 706 48 C700 44 698 32 703 20 Z" fill="#a294b0" opacity=".7"/>
+              <path d="M691 30 C696 24 701 21 703 20 C707 22 713 27 719 34 C712 31 705 32 699 35 C695 36 691 34 691 30 Z" fill="#f4ecf8"/>
+              <path d="M592 64 C614 47 630 36 642 36 C657 36 674 49 694 64 Z" fill="#6f6280"/>
+              <path d="M642 36 C650 41 658 49 668 58 C659 56 651 56 645 58 C641 52 640 43 642 36 Z" fill="#8a7d9c" opacity=".6"/>
+            </g>
+            <g opacity=".95">
+              <use href="#d-sapin" fill="#3f8368" transform="translate(524 65) scale(.2)"/>
+              <use href="#d-sapin" fill="#468a6d" transform="translate(542 65) scale(.16)"/>
+              <use href="#d-sapin" fill="#3c7a60" transform="translate(558 65) scale(.19)"/>
+              <use href="#d-sapin" fill="#468a6d" transform="translate(806 65) scale(.17)"/>
+              <use href="#d-sapin" fill="#3f8368" transform="translate(824 65) scale(.21)"/>
+              <use href="#d-sapin" fill="#3c7a60" transform="translate(866 65) scale(.18)"/>
+            </g>
+
+            <!-- ---------- le volcan miniature, pile au-dessus de la remontée ----------
+                 Reprise de la silhouette de #d-cone, réduite à ~94 px de large :
+                 translate(430 64) pose le centre de sa base sur la surface.
+                 Il fait partie de la plaque continentale — « cette plaque porte la
+                 terre où nous vivons et notre volcan » — donc le toucher répond. -->
+            <ellipse cx="430" cy="65" rx="50" ry="4" fill="#2f2438" opacity=".22"/>
+            <g id="p-volcan" transform="translate(430 64) scale(.175) translate(-450 -340)">
+              <path d="M180 340 C240 318 332 254 408 116 Q450 146 492 116 C568 254 660 318 720 340 Z" fill="url(#grad-p-volcan)"/>
+              <path d="M492 116 C568 254 660 318 720 340 L686 340 C632 312 550 246 482 122 Z" fill="#e2d2df" opacity=".35"/>
+              <path d="M408 116 C332 254 240 318 180 340 L226 340 C296 310 372 246 418 122 Z" fill="#2c2440" opacity=".28"/>
+              <!-- son petit cratère, avec une braise au fond -->
+              <ellipse cx="450" cy="123" rx="43" ry="13" fill="#3a2f46"/>
+              <ellipse cx="450" cy="124" rx="26" ry="8" fill="url(#grad-p-magma)"/>
+              <!-- le filet de fumée -->
+              <g class="fumee">
+                <circle class="puff" cx="444" cy="66" r="30" fill="#ffffff" opacity=".7"/>
+                <circle class="puff" cx="458" cy="16" r="38" fill="#ffffff" opacity=".55"/>
+              </g>
+            </g>
+            <!-- sa base chevauche la plaque qui plonge : un liseré clair la souligne.
+                 C'est le bord bas de #p-cont-forme : les deux se déplacent ensemble. -->
+            <path d="M900 208 C790 214 680 214 610 206 C530 196 468 180 414 158 C370 140 320 124 272 110"
+                  fill="none" stroke="#9b89a4" stroke-width="2.6" opacity=".6" stroke-linecap="round"/>
+            <!-- elle pousse vers la gauche : les deux plaques se rentrent dedans -->
+            <path d="M772 178 L700 178" fill="none" stroke="#ffeccd" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+            <path d="M678 178 L702 170 L702 186 Z" fill="#ffeccd" opacity=".75"/>
+          </g>
+
+          <!-- ---------- la croûte : la peau dure de la Terre ----------
+               C'est la couche du dessus des DEUX plaques : posée après elles,
+               elle reste cliquable sur toute la surface. -->
+          <g id="p-croute" class="zone" tabindex="0" role="button">
+            <use href="#p-croute-cont" fill="url(#grad-p-croute)"/>
+            <use href="#p-croute-oce" fill="url(#grad-p-croute)"/>
+            <!-- la mince peau de terre et d'herbe, là où le continent émerge.
+                 Elle part du rivage (355,72) : le point exact où la pente du
+                 continent croise le niveau de la mer — c'est aussi là que
+                 s'arrête l'eau de #p-ocean. Les deux vont de pair. -->
+            <path d="M355 72 C365 68.8 375.5 66 386 64 L900 64 L900 70 L386 70 C375 72.5 365 75.5 356 79 Z"
+                  fill="#7fc48c"/>
+            <!-- texture : de petits traits de roche stratifiée -->
+            <g clip-path="url(#clip-p-croute)" stroke-linecap="round" opacity=".38">
+              <g fill="none" stroke="#e0cdb4" stroke-width="2">
+                <path d="M336 92 C368 84 396 80 428 78"/>
+                <path d="M480 76 C520 74 552 74 588 75"/>
+                <path d="M644 78 C680 77 708 77 740 78"/>
+                <path d="M790 74 C822 73 848 73 878 74"/>
+                <path d="M300 106 C330 98 358 93 386 90"/>
+                <path d="M438 88 C470 86 496 86 524 87"/>
+                <path d="M566 90 C600 89 628 89 658 90"/>
+                <path d="M712 86 C746 85 774 85 806 86"/>
+                <path d="M28 101 L112 101"/>
+                <path d="M148 101 L206 102"/>
+                <path d="M-14 104 L4 104"/>
+              </g>
+              <!-- petits cailloux pris dans la croûte -->
+              <g fill="#5c4a44" opacity=".55">
+                <path d="M462 80 l8 -3 5 5 -7 4 z"/>
+                <path d="M604 84 l7 -3 4 5 -6 4 z"/>
+                <path d="M752 82 l8 -3 5 5 -7 4 z"/>
+                <path d="M856 88 l7 -3 4 5 -6 4 z"/>
+                <path d="M394 96 l7 -3 4 5 -6 4 z"/>
+                <path d="M540 92 l6 -2 4 4 -5 4 z"/>
+                <path d="M684 90 l7 -3 4 5 -6 4 z"/>
+                <path d="M78 104 l6 -2 4 4 -5 3 z"/>
+                <path d="M186 104 l5 -2 3 4 -5 3 z"/>
+              </g>
+            </g>
+            <!-- la fosse océanique : le pli où la plaque s'enfonce -->
+            <path d="M258 100 C266 104 270 108 274 114" fill="none" stroke="#3d3247" stroke-width="2.4" opacity=".5" stroke-linecap="round"/>
+          </g>
+
+          <!-- ---------- la zone de fusion : AU-DESSUS de la plaque plongeante ----------
+               La lueur est découpée par clip-p-coin (le coin de manteau), donc
+               elle ne peut jamais déborder sur la plaque qui plonge. -->
+          <g id="p-fusion" class="zone" tabindex="0" role="button">
+            <g clip-path="url(#clip-p-coin)">
+              <ellipse class="lueur" cx="422" cy="252" rx="96" ry="86" fill="url(#grad-p-fusion)"/>
+              <ellipse class="lueur" cx="424" cy="242" rx="52" ry="48" fill="url(#grad-p-fusion)"/>
+            </g>
+            <!-- les perles de magma tout juste nées -->
+            <g class="perles">
+              <ellipse class="perle" cx="396" cy="254" rx="7" ry="9" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="424" cy="264" rx="5.5" ry="7" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="406" cy="232" rx="9.5" ry="12" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="440" cy="244" rx="6" ry="7.5" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="422" cy="208" rx="8.5" ry="10.5" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="452" cy="224" rx="5.5" ry="7" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="410" cy="186" rx="6.5" ry="8" fill="url(#grad-p-magma)"/>
+              <ellipse class="perle" cx="434" cy="178" rx="5" ry="6.5" fill="url(#grad-p-magma)"/>
+            </g>
+          </g>
+
+          <!-- ---------- la remontée : le magma est léger, il monte ---------- -->
+          <g id="p-remontee" class="zone" tabindex="0" role="button">
+            <!-- le halo de chaleur du conduit -->
+            <path d="M418 206 C423 172 425 136 430 100" fill="none" stroke="#ff7a3c" stroke-width="26" opacity=".18" stroke-linecap="round"/>
+            <!-- le conduit, en pointillé : le magma monte goutte après goutte -->
+            <path d="M418 206 C423 172 425 136 430 100" fill="none" stroke="#ffb15c" stroke-width="11"
+                  stroke-dasharray="13 13" stroke-linecap="round" opacity=".8"/>
+            <!-- la petite poche qui se remplit sous le volcan : la chambre magmatique.
+                 Elle reste dans l'épaisseur de la croûte (y 64→96), avec sa paroi
+                 de roche, comme la grande chambre de la vue Dedans. -->
+            <ellipse cx="430" cy="88" rx="30" ry="18" fill="url(#grad-p-fusion)" opacity=".45"/>
+            <ellipse cx="430" cy="88" rx="20" ry="11" fill="url(#grad-p-magma)"/>
+            <ellipse cx="430" cy="88" rx="20" ry="11" fill="none" stroke="#6b5b73" stroke-width="2.6"/>
+            <path d="M416 84 C420 80 440 80 444 84" fill="none" stroke="#fff6c8" stroke-width="1.8" opacity=".55" stroke-linecap="round"/>
+
+            <!-- les gouttes qui remontent (vitesse pilotée plus tard) -->
+            <g id="p-flux">
+              <ellipse class="goutte" style="--i:0" cx="416" cy="205" rx="6.5" ry="8.5" fill="url(#grad-p-magma)"/>
+              <ellipse class="goutte" style="--i:1" cx="420" cy="203" rx="5.5" ry="7.5" fill="url(#grad-p-magma)"/>
+              <ellipse class="goutte" style="--i:2" cx="417" cy="207" rx="7" ry="9" fill="url(#grad-p-magma)"/>
+              <ellipse class="goutte" style="--i:3" cx="421" cy="204" rx="5" ry="7" fill="url(#grad-p-magma)"/>
+              <ellipse class="goutte" style="--i:4" cx="415" cy="203" rx="6" ry="8" fill="url(#grad-p-magma)"/>
+              <ellipse class="goutte" style="--i:5" cx="419" cy="206" rx="7.5" ry="9.5" fill="url(#grad-p-magma)"/>
+            </g>
+          </g>
+
+          <!-- ---------- les éclats de séisme, le long du contact des plaques ----------
+               opacity 0 : c'est le curseur temps qui les allume au réveil. -->
+          <g id="p-seisme" class="zone" tabindex="0" role="button" opacity="0">
+            <g transform="translate(300 126)"><use href="#p-eclair" class="eclat"/></g>
+            <g transform="translate(334 152) scale(.85)"><use href="#p-eclair" class="eclat"/></g>
+            <g transform="translate(368 196) scale(1.15)"><use href="#p-eclair" class="eclat"/></g>
           </g>
 
         </g>
