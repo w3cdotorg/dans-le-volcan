@@ -2598,8 +2598,25 @@ $("#loupeBtn").addEventListener("click", () => {
 
 // pointerdown en plus de pointermove : au doigt, il n'y a pas de survol
 // avant le premier contact, la loupe doit donc apparaître dès le "tap".
-sceneSvg.addEventListener("pointerdown", e => { if (loupeOn) updateLens(e); });
-sceneSvg.addEventListener("pointermove", e => { if (loupeOn) updateLens(e); });
+//
+// Cadencé par requestAnimationFrame : les pointermove arrivent à 120-250 Hz,
+// bien plus vite que les frames, et chaque updateLens force un relayout
+// synchrone (getBoundingClientRect sur un layout invalidé par le viewBox de
+// l'événement précédent) — ~1,25 ms par événement, refait plusieurs fois par
+// frame en pure perte : la loupe LAGGUAIT. On ne garde que le dernier
+// événement et on fait le travail une seule fois, dans la frame.
+let lensEvent = null;
+function scheduleLens(e){
+  if (!loupeOn) return;
+  const premier = !lensEvent;
+  lensEvent = e;
+  if (premier) requestAnimationFrame(() => {
+    if (lensEvent && loupeOn) updateLens(lensEvent);
+    lensEvent = null;
+  });
+}
+sceneSvg.addEventListener("pointerdown", scheduleLens);
+sceneSvg.addEventListener("pointermove", scheduleLens);
 
 /* ==========================================================================
    10) MINI-JEU — « Trouve la bonne partie ! »
