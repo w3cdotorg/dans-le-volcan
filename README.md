@@ -1,4 +1,4 @@
-# Dans mon volcan 🌋
+# Dans le volcan 🌋
 
 **→ [Ouvrir le site](https://w3cdotorg.github.io/dans-le-volcan/)**
 
