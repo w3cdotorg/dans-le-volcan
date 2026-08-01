@@ -2361,12 +2361,13 @@ const vueDe = id => id.startsWith("d-") ? 0 : id.startsWith("c-") ? 1 : 2;
 function startQuiz(){
   if (quiz) return;                                   // déjà en cours : on ignore un second clic sur #jeu
   const qs = [...QUIZ_POOL].sort(() => Math.random() - .5).slice(0, 3);
-  quiz = { questions: qs, index: 0, stars: 0 };
+  quiz = { questions: qs, index: 0, stars: 0, timer: null, waiting: false };
   $("#quiz").classList.add("open");
   renderStars();
   askNext();
 }
 function askNext(){
+  quiz.timer = null; quiz.waiting = false;            // le délai qui a mené ici (s'il y en avait un) est terminé
   if (quiz.index >= 3){ endQuiz(); return; }
   const q = quiz.questions[quiz.index];
   const target = document.getElementById(q.ids[0]);
@@ -2381,11 +2382,22 @@ function askNext(){
   say(q.q);
 }
 function onZoneClickInQuiz(id){
+  // fenêtre des 1.2s après une bonne réponse : la question affichée est déjà
+  // la suivante en interne (index incrémenté) mais pas encore posée à l'écran
+  // (askNext() n'a pas encore tourné) — un clic ici serait jugé contre la
+  // mauvaise question. On l'ignore silencieusement, sans secousse.
+  if (quiz.waiting) return;
+  // l'enfant peut rembobiner le curseur temps PENDANT une question et cliquer
+  // une zone redevenue invisible : même garde que showInfo (Task 7), pour la
+  // même raison — une zone qu'on ne voit pas ne doit ni compter, ni faire trembler.
+  const el = document.getElementById(id);
+  if (el && parseFloat(getComputedStyle(el).opacity) < .05) return;
   const q = quiz.questions[quiz.index];
   if (q.ids.includes(id)){
     quiz.stars++; quiz.index++;
     confetti(); say("Bravo !"); renderStars();
-    setTimeout(askNext, 1200);
+    quiz.waiting = true;
+    quiz.timer = setTimeout(askNext, 1200);
   } else {
     say("Presque ! Cherche encore.");
     const qEl = $("#quizQ");
@@ -2399,9 +2411,15 @@ function endQuiz(){
   $("#quizQ").textContent = "Bravo, champion des volcans ! ⭐⭐⭐";
   say("Bravo, tu es un vrai petit volcanologue !");
   confetti(); confetti();
-  setTimeout(closeQuiz, 3000);
+  quiz.waiting = true;                                // la partie est finie : plus aucun clic de zone ne doit compter
+  quiz.timer = setTimeout(closeQuiz, 3000);
 }
 function closeQuiz(){
+  // annule le timer en vol (askNext ou closeQuiz lui-même) : sans ce clearTimeout,
+  // un ✖️ cliqué pendant les 1.2s post-bonne-réponse ou pendant la fermeture
+  // auto d'endQuiz laisserait le setTimeout tourner et planter sur `quiz`
+  // devenu null (cf. revue de code).
+  if (quiz && quiz.timer) clearTimeout(quiz.timer);
   $("#quiz").classList.remove("open");
   quiz = null;
   $("#quizQ").textContent = "";
