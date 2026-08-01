@@ -2133,6 +2133,11 @@ const glideCut = makeGlide(setCut, () => cut, 500);
 $("#cut").addEventListener("input", e => { glideCut.cancel(); setCut(e.target.value / 100); });
 $$(".pill").forEach(p => p.addEventListener("click", () => glideCut(+p.dataset.cut)));
 addEventListener("keydown", e => {
+  // Fix revue finale : un slider natif (#cut/#time) focusé doit rester piloté
+  // au clavier par le navigateur (finesse du pas natif, event "input" déjà
+  // câblé vers setCut/setTime) — sinon preventDefault() ci-dessous le rend
+  // muet aux flèches et la page ne défile jamais non plus.
+  if (e.target === $("#cut") || e.target === $("#time")) return;
   if (e.key === "ArrowDown"){ e.preventDefault(); glideCut(clamp(Math.round(cut)+1,0,2)); }
   if (e.key === "ArrowUp"){ e.preventDefault(); glideCut(clamp(Math.round(cut)-1,0,2)); }
 });
@@ -2185,6 +2190,9 @@ const glideTime = makeGlide(setTime, () => time, 600);
 $("#time").addEventListener("input", e => { glideTime.cancel(); setTime(e.target.value / 100); });
 $$(".moment").forEach(m => m.addEventListener("click", () => glideTime(+m.dataset.time)));
 addEventListener("keydown", e => {
+  // Fix revue finale : cf. commentaire jumeau sur le handler ArrowUp/ArrowDown
+  // de #cut ci-dessus — même garde pour laisser #time natif aux flèches.
+  if (e.target === $("#cut") || e.target === $("#time")) return;
   if (e.key === "ArrowRight"){ e.preventDefault(); glideTime(clamp(Math.round(time)+1,0,4)); }
   if (e.key === "ArrowLeft"){ e.preventDefault(); glideTime(clamp(Math.round(time)-1,0,4)); }
 });
@@ -2352,8 +2360,18 @@ $$(".zone").forEach(z => {
   });
 });
 $("#zones").addEventListener("click", () => {
+  // Fix revue finale : un second clic pendant les 3.5s était un no-op (la
+  // classe était déjà posée) ET le PREMIER setTimeout retirait quand même la
+  // classe à son échéance d'origine, coupant court la pulsation relancée.
+  // Pattern reflow déjà utilisé pour .shake (Task 10) : on retire la classe,
+  // on force un reflow pour que le navigateur "oublie" l'état précédent, on
+  // la remet — puis on remplace le timer en cours par un nouveau, sur la
+  // durée complète de 3.5s à partir de CE clic.
+  clearTimeout($("#zones")._t);
+  document.body.classList.remove("show-zones");
+  void document.body.offsetWidth;
   document.body.classList.add("show-zones");
-  setTimeout(() => document.body.classList.remove("show-zones"), 3500);
+  $("#zones")._t = setTimeout(() => document.body.classList.remove("show-zones"), 3500);
 });
 
 /* ---------- accessibilité des zones (Task 11) ----------
@@ -2379,9 +2397,19 @@ function zoneAtteignable(z){
 }
 function syncZonesA11y(){
   $$(".zone").forEach(z => {
+    // Lève notre propre override avant de mesurer : zoneAtteignable() lit le
+    // pointer-events CALCULÉ, qui reflète en priorité un style inline posé
+    // ICI au tour précédent. Sans ce reset, une zone passée à "none" ne
+    // pourrait plus jamais être vue "atteignable" par la mesure suivante —
+    // verrou sur elle-même, trouvé en testant le mini-jeu après le fix loupe.
+    z.style.pointerEvents = "";
     const ok = zoneAtteignable(z);
     z.setAttribute("tabindex", ok ? "0" : "-1");
-    if (ok){ z.removeAttribute("aria-hidden"); return; }
+    if (ok){
+      z.removeAttribute("aria-hidden");
+      // pointer-events déjà remis à "" ci-dessus (reset fait avant la mesure).
+      return;
+    }
     // aria-hidden sur l'élément qui a le focus est une faute d'accessibilité
     // (le lecteur d'écran perd le curseur). z.blur() seul renvoie le focus au
     // <body> : le Tab suivant repart du tout premier élément focusable de la
@@ -2393,6 +2421,15 @@ function syncZonesA11y(){
       if (box) box.focus({preventScroll:true});
     }
     z.setAttribute("aria-hidden", "true");
+    // Fix revue finale : le clic NATIF direct (pas via la loupe) sur une zone
+    // invisible mais hit-testable (ex. c-coulee à opacity 0) focusait quand
+    // même ce <g aria-hidden> — le garde ci-dessus ne protège que le relais de
+    // clic de la loupe. pointer-events:none la retire du hit-test réel tout en
+    // laissant setCut() gérer les pointer-events des GROUPES de vue sans
+    // conflit (une propriété inline par zone se superpose à l'héritage posé au
+    // niveau du groupe). Remis à "" ci-dessus dès que la zone redevient
+    // atteignable.
+    z.style.pointerEvents = "none";
   });
   // Marques orphelines : le halo .selected et l'étiquette flottante restaient
   // affichés après un changement de vue ou de moment — on se retrouvait avec
