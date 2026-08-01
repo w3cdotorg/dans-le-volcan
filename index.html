@@ -114,11 +114,18 @@ h1{
   line-height:.98;
   margin:.2em 0 .1em;
   letter-spacing:-.01em;
+}
+/* Le dégradé découpé en texte porte sur les MOTS seuls, plus sur tout le <h1>
+   (Task 11) : `background-clip:text` transforme l'ensemble du texte du bloc en
+   masque, émoji compris — le 🌋 du titre était alors soit une silhouette
+   orange sans relief, soit purement invisible dès que son animation le
+   composait sur sa propre couche. Isolé du masque, il retrouve ses couleurs. */
+h1 .titre-mots{
   background:linear-gradient(178deg,#fff9ef,#ffcf8f 55%,var(--lave));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 6px 24px rgba(255,120,60,.32));
 }
-h1 .volcan-em{display:inline-block;animation:secousse 2.6s ease-in-out infinite;transform-origin:50% 85%}
+h1 .volcan-em{display:inline-block;animation:secousse 2.6s ease-in-out infinite;transform-origin:50% 85%;filter:drop-shadow(0 6px 18px rgba(255,120,60,.45))}
 @keyframes secousse{0%,55%,100%{transform:rotate(0) translateY(0)}62%{transform:rotate(-4deg) translateY(-1px)}70%{transform:rotate(3deg)}78%{transform:rotate(-2deg) translateY(1px)}86%{transform:rotate(0)}}
 .tagline{margin:.2em auto 0;max-width:46ch;color:var(--cream-soft);font-size:clamp(.95rem,2.1vw,1.15rem);font-weight:500}
 
@@ -184,12 +191,17 @@ svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margi
 
 /* ------------------------------- curseur temps */
 .time-control{display:flex;flex-direction:column;gap:8px}
-#time{width:100%}
+/* height:44px et non la hauteur naturelle (22px, celle de la piste) : la zone
+   sensible d'un input range EST sa boîte, et 22 px se rate au pouce. La piste
+   et le pouce restent centrés verticalement dans la boîte. */
+#time{width:100%;height:44px}
 .moments{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .moment{
   cursor:pointer;font-family:var(--font-display);font-weight:600;
   display:flex;flex-direction:column;align-items:center;gap:.15em;
   padding:.5em .15em .45em;border-radius:16px;
+  min-height:56px;                 /* cible tactile confortable (Task 11) */
+  justify-content:center;
   border:2px solid rgba(255,255,255,.16);
   background:rgba(255,255,255,.05);
   color:var(--cream);font-size:clamp(.6rem,1.4vw,.82rem);
@@ -213,6 +225,7 @@ svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margi
   cursor:pointer;font-family:var(--font-display);font-weight:600;
   display:flex;align-items:center;gap:.55em;
   padding:.5em .9em;border-radius:999px;
+  min-height:44px;                 /* cible tactile confortable (Task 11) */
   border:2px solid rgba(255,255,255,.16);
   background:rgba(255,255,255,.05);
   color:var(--cream);font-size:clamp(.82rem,1.7vw,.98rem);
@@ -258,7 +271,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14)}
 input[type=range]:focus-visible{outline:3px solid var(--braise);outline-offset:6px;border-radius:999px}
 
 .cut-wrap{width:44px;height:200px;margin:4px auto 0;display:flex;align-items:center;justify-content:center}
-#cut{width:200px;height:38px;transform:rotate(90deg)}
+#cut{width:200px;height:44px;transform:rotate(90deg)}   /* 44 px : une fois tourné, c'est la largeur de la cible */
 #cut::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--c-dehors),var(--c-dedans) 50%,var(--c-prof))}
 #cut::-moz-range-track{background:linear-gradient(90deg,var(--c-dehors),var(--c-dedans) 50%,var(--c-prof))}
 
@@ -289,6 +302,7 @@ body[data-vue="2"]{--accent:var(--c-prof)}
   font-family:var(--font-display);font-weight:600;cursor:pointer;
   display:inline-flex;align-items:center;gap:.45em;
   padding:.55em 1.1em;border-radius:999px;border:2px solid transparent;
+  min-height:44px;                 /* cible tactile confortable (Task 11) */
   font-size:clamp(.85rem,1.8vw,1rem);
   background:linear-gradient(160deg,#fff6e2,#ffab6b);color:#3d220b;
   box-shadow:0 10px 24px -12px rgba(255,171,107,.95);
@@ -304,6 +318,19 @@ body[data-vue="2"]{--accent:var(--c-prof)}
 }
 .btn.play{background:linear-gradient(160deg,#ffd9a8,var(--lave));color:#2e0e02;box-shadow:0 10px 24px -12px rgba(255,90,42,.95)}
 .btn[aria-pressed="false"]{filter:grayscale(.5) brightness(.9)}
+
+/* ------------------------------- focus clavier (Task 11)
+   Un seul anneau pour toutes les commandes HTML. :focus-visible seulement :
+   un enfant qui tape au doigt ne voit jamais l'anneau, un enfant au clavier
+   le voit toujours. Les zones SVG ont leur propre traitement (drop-shadow,
+   plus bas) : un outline y suivrait la boîte englobante, pas la forme. */
+.btn:focus-visible,
+.pill:focus-visible,
+.moment:focus-visible,
+.quiz-quit:focus-visible{
+  outline:3px solid var(--braise);
+  outline-offset:3px;
+}
 
 footer{
   position:relative;z-index:2;text-align:center;
@@ -420,8 +447,12 @@ footer{
 
 /* ------------------------------- curseur temps (Task 6)
    Séisme du réveil : tout le volcan tremble légèrement. Coupé par la
-   règle reduced-motion ci-dessous (elle cible *, donc #volcan aussi). */
-.tremble #volcan{animation:tremble .18s linear infinite}
+   règle reduced-motion ci-dessous (elle cible *, donc .svgbox aussi).
+   Task 11 : la secousse porte sur .svgbox et non sur #volcan seul, pour
+   emmener la loupe avec elle. Sinon #volcan bouge de ±1,5 px alors que
+   #lens (positionné en absolu dans .svgbox, non secoué) reste immobile
+   entre deux pointermove : la lentille se décale du dessin à chaque frame. */
+.tremble .svgbox{animation:tremble .18s linear infinite}
 @keyframes tremble{
   25%{transform:translate(1.5px,-1px)}
   75%{transform:translate(-1.5px,1px)}
@@ -442,6 +473,13 @@ footer{
    n'est pas une animation, .selected reste visible même en reduced-motion. */
 .zone{cursor:pointer}
 .zone.selected{filter:drop-shadow(0 0 3px var(--cream)) drop-shadow(0 0 9px var(--cream))}
+/* focus clavier des zones : même technique que .selected (drop-shadow et non
+   outline — un outline sur un <g> SVG est tracé autour de la boîte englobante
+   NON découpée, donc énorme et faux pour les zones sous clip-path). Couleur
+   braise pour se distinguer du blanc de la sélection ; placée APRÈS .selected
+   pour rester visible quand la zone est à la fois choisie et focalisée. */
+.zone:focus{outline:none}
+.zone:focus-visible{filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 10px var(--braise)) drop-shadow(0 0 18px var(--lave))}
 
 /* « Montrer les zones » : 3 pulsations en 3.5s, une seule animation (pas de
    iteration-count) pour rester alignée sur le setTimeout JS qui retire la
@@ -485,7 +523,9 @@ footer{
   position:relative;
   flex-direction:column;align-items:center;gap:6px;
   text-align:center;
-  padding:clamp(14px,2.4vw,20px) clamp(46px,7vw,60px);
+  /* la marge droite doit dépasser #quizQuit (40px de large, calé à right:12px)
+     sinon la 1re ligne de la question passe sous la croix sur écran étroit */
+  padding:clamp(14px,2.4vw,20px) clamp(56px,8vw,62px);
   border-radius:var(--r-md);
   background:linear-gradient(168deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
   border:2px solid rgba(255,255,255,.24);
@@ -507,7 +547,7 @@ footer{
 .quiz-banner .quiz-stars{font-size:clamp(1.3rem,3vw,1.7rem);margin:0;letter-spacing:.18em;min-height:1.4em}
 .quiz-quit{
   position:absolute;top:8px;right:12px;
-  width:34px;height:34px;border-radius:50%;
+  width:40px;height:40px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.26);
   color:var(--cream);font-size:1rem;cursor:pointer;
@@ -530,7 +570,55 @@ footer{
   100%{transform:translate(var(--dx,0px),420px) rotate(var(--rot,540deg));opacity:.1}
 }
 
-@media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} }
+/* ------------------------------- téléphone (Task 11)
+   Sous 560px de large, le curseur de coupe vertical (44×200 px, tourné à 90°)
+   mange toute la hauteur du panneau et se manipule mal au pouce : on le
+   redresse à l'horizontale, pleine largeur, sous les trois pastilles. */
+@media (max-width:560px){
+  .cuts{flex-direction:column;align-items:stretch;gap:12px}
+  .cut-wrap{width:100%;height:44px;margin:0}
+  #cut{width:100%;height:44px;transform:none}
+  .moment{min-height:62px}
+  .moment .lbl{hyphens:auto}
+}
+
+/* ------------------------------- ambiance : coulées actives (Task 11)
+   Un scintillement discret sur le seul REFLET des coulées en cours (pas sur
+   le groupe entier) : l'opacité du groupe est pilotée en style inline par
+   setTime(), et une animation CSS d'opacité sur ce même élément l'écraserait
+   — la coulée cesserait d'obéir au curseur temps. */
+#d-coulees-ext .scintille{animation:scintille 3.4s ease-in-out infinite}
+#c-coulee .scintille{animation:scintille 2.8s ease-in-out infinite;animation-delay:-1.1s}
+@keyframes scintille{0%,100%{opacity:.26}50%{opacity:.72}}
+
+/* ------------------------------- ambiance : les oiseaux planent (Task 11)
+   On anime la propriété CSS `translate`, PAS `transform` : chaque oiseau porte
+   déjà un attribut transform="translate(...) scale(...)" (qui EST la propriété
+   transform) — l'animer l'écraserait et empilerait les trois oiseaux à
+   l'origine. `translate` se compose en amont, dans l'espace du parent, donc
+   les valeurs sont en unités du viewBox et la mise en place reste intacte.
+   Pas de `rotate` : sans transform-box:fill-box il pivoterait autour de
+   l'origine du viewBox (l'oiseau partirait à l'autre bout du ciel), et poser
+   transform-box déplacerait l'attribut transform existant. */
+#d-oiseaux .oiseau{animation:plane 6.5s ease-in-out infinite}
+#d-oiseaux .oiseau:nth-of-type(2){animation-duration:8.2s;animation-delay:-2.6s}
+#d-oiseaux .oiseau:nth-of-type(3){animation-duration:7.1s;animation-delay:-4.3s}
+@keyframes plane{
+  0%,100%{translate:0 0}
+  32%{translate:7px -8px}
+  68%{translate:-5px 5px}
+}
+
+/* ------------------------------- mouvement réduit (Task 11)
+   Tout ce qui bouge s'arrête. Deux retours visuels reposaient UNIQUEMENT sur
+   une animation : « Montrer les zones » et la secousse d'une mauvaise réponse
+   au jeu. On leur donne ici un équivalent statique, sinon les deux boutons
+   n'ont plus aucun effet perceptible en mouvement réduit. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+  .show-zones .zone{filter:drop-shadow(0 0 3px var(--cream)) drop-shadow(0 0 10px var(--cream))}
+  .quiz-banner .quiz-q.shake{color:#ffc7a8;text-shadow:0 0 14px rgba(255,90,42,.85)}
+}
 </style>
 </head>
 <body>
@@ -548,7 +636,7 @@ footer{
 </div>
 
 <header>
-  <h1>Dans mon volcan <span class="volcan-em" aria-hidden="true">🌋</span></h1>
+  <h1><span class="titre-mots">Dans mon volcan</span> <span class="volcan-em" aria-hidden="true">🌋</span></h1>
   <p class="tagline">Tourne les deux boutons&nbsp;: découvre le volcan et fais-le entrer en éruption&nbsp;!</p>
 </header>
 
@@ -558,15 +646,22 @@ footer{
   <main class="scene card" aria-label="Le volcan">
     <!-- ============ mini-jeu « Trouve la bonne partie ! » (Task 10) ============
          Caché par défaut, .open l'affiche (posée en JS par startQuiz()). -->
-    <div class="quiz-banner" id="quiz" aria-live="polite">
+    <!-- aria-live sur la QUESTION seule, pas sur tout le bandeau : sinon
+         l'ouverture du jeu fait aussi annoncer « Quitter le jeu » et chaque
+         étoile gagnée relance la lecture de la question. Le compteur
+         d'étoiles a son propre libellé, mis à jour par renderStars(). -->
+    <div class="quiz-banner" id="quiz">
       <button type="button" id="quizQuit" class="quiz-quit" aria-label="Quitter le jeu">✖️</button>
-      <p class="quiz-q" id="quizQ"></p>
-      <p class="quiz-stars" id="quizStars"></p>
+      <p class="quiz-q" id="quizQ" aria-live="polite"></p>
+      <p class="quiz-stars" id="quizStars" role="img" aria-label="Aucune étoile"></p>
     </div>
     <!-- confettis : particules DOM ajoutées/retirées par confetti() (Task 10) -->
     <div id="confetti-layer" aria-hidden="true"></div>
     <div class="svgbox">
-      <svg id="volcan" viewBox="0 0 900 560" role="img" aria-label="Le volcan">
+      <!-- role="group" et non "img" (Task 11) : un role="img" présente le SVG
+           comme une image ATOMIQUE, ce qui masque aux lecteurs d'écran les 35
+           role="button" internes — or ce sont eux, tout l'intérêt du dessin. -->
+      <svg id="volcan" viewBox="0 0 900 560" role="group" aria-label="Le volcan : touche une partie pour la découvrir">
         <defs>
           <!-- ============ dégradés (préfixe grad-d- : vue Dehors) ============ -->
           <linearGradient id="grad-d-ciel" x1="0" y1="0" x2="0" y2="1">
@@ -988,13 +1083,17 @@ footer{
           <!-- ---------- coulées orange (éruption) : invisibles au repos ---------- -->
           <g id="d-coulees-ext" opacity="0">
             <use href="#d-langues" fill="url(#grad-d-lave)"/>
-            <use href="#d-langues" fill="#fff3c4" opacity=".45" transform="translate(0 -4) scale(.97) translate(14 8)"/>
+            <use class="scintille" href="#d-langues" fill="#fff3c4" opacity=".45" transform="translate(0 -4) scale(.97) translate(14 8)"/>
           </g>
 
-          <!-- ---------- coulées refroidies (repos) : invisibles au repos ---------- -->
+          <!-- ---------- coulées refroidies (repos) : invisibles au repos ----------
+               Moment pédagogique clé (« la lave devient roche ») : le noir
+               d'origine (#2b2338) se perdait sur la roche sombre du cône. On
+               éclaircit à un violet basalte et on ajoute un liseré clair, pour
+               que la langue de roche se LISE nettement sur le flanc. -->
           <g id="d-coulees-noires" opacity="0">
-            <use href="#d-langues" fill="#2b2338"/>
-            <use href="#d-langues" fill="#5b5170" opacity=".35" transform="translate(6 -5) scale(.96) translate(20 10)"/>
+            <use href="#d-langues" fill="#3b3050" stroke="#a397bd" stroke-width="2.4" stroke-opacity=".8"/>
+            <use href="#d-langues" fill="#7a6d99" opacity=".45" transform="translate(6 -5) scale(.96) translate(20 10)"/>
           </g>
 
           <!-- ---------- pousses vertes (repos) : invisibles au repos ---------- -->
@@ -1248,9 +1347,9 @@ footer{
 
           <!-- ---------- les oiseaux ---------- -->
           <g id="d-oiseaux" class="zone" tabindex="0" role="button">
-            <use href="#d-oiseau" transform="translate(692 168) scale(1.15)"/>
-            <use href="#d-oiseau" transform="translate(742 194) scale(.85)"/>
-            <use href="#d-oiseau" transform="translate(654 206) scale(.7)"/>
+            <use class="oiseau" href="#d-oiseau" transform="translate(692 168) scale(1.15)"/>
+            <use class="oiseau" href="#d-oiseau" transform="translate(742 194) scale(.85)"/>
+            <use class="oiseau" href="#d-oiseau" transform="translate(654 206) scale(.7)"/>
           </g>
 
         </g>
@@ -1497,7 +1596,7 @@ footer{
           <g id="c-coulee" class="zone" tabindex="0" role="button" opacity="0">
             <path d="M410 124 C384 166 330 236 290 276 C266 300 234 322 206 336 Q222 348 244 340 C272 322 300 298 324 274 C362 236 414 168 434 130 Z"
                   fill="url(#grad-c-coulee)"/>
-            <path d="M418 132 C394 172 342 238 304 276 C282 298 254 318 230 332" fill="none" stroke="#fff3c4" stroke-width="6" opacity=".5" stroke-linecap="round"/>
+            <path class="scintille" d="M418 132 C394 172 342 238 304 276 C282 298 254 318 230 332" fill="none" stroke="#fff3c4" stroke-width="6" opacity=".5" stroke-linecap="round"/>
             <!-- le front de la coulée, arrondi -->
             <path d="M206 336 C192 340 190 348 202 350 C220 352 238 348 244 340 C230 344 216 342 206 336 Z" fill="#ff7a3c"/>
             <ellipse cx="216" cy="343" rx="13" ry="4.5" fill="#fff0b0" opacity=".6"/>
@@ -1906,10 +2005,14 @@ footer{
       </div>
     </div>
 
+    <!-- L'émoji est décoratif : il double le titre et n'apporte rien à voix
+         haute. Le NOM de la partie est déjà annoncé par l'aria-label de la
+         zone au moment du clic (posé en JS depuis INFO), donc seule
+         l'explication a besoin d'être une région live. -->
     <div class="card info" id="info">
-      <div class="big" id="infoEmoji">🌋</div>
+      <div class="big" id="infoEmoji" aria-hidden="true">🌋</div>
       <h2 id="infoTitle">Touche le volcan&nbsp;!</h2>
-      <p id="infoText">Appuie sur ce que tu veux découvrir, ou tourne les deux gros boutons.</p>
+      <p id="infoText" aria-live="polite">Appuie sur ce que tu veux découvrir, ou tourne les deux gros boutons.</p>
     </div>
 
     <div class="card tools">
@@ -1933,16 +2036,25 @@ footer{
    DANS MON VOLCAN — script principal
    Sections :
      5) Curseur COUPE (setCut)      — fondu entre les 3 vues
-     6) Curseur TEMPS (setTime)     — à venir
-     7) Zones cliquables + INFO     — à venir
-     8) Voix (off par défaut)       — à venir
-     9) Loupe                       — à venir
-    10) Mini-jeu                    — à venir
+     6) Curseur TEMPS (setTime)     — l'éruption interpolée sur les 3 vues
+     7) Zones cliquables + INFO     — 35 zones, carte info, étiquette, a11y
+     8) Voix (off par défaut)       — synthèse vocale française
+     9) Loupe                       — 2e SVG zoomé + relais de clic
+    10) Mini-jeu                    — « Trouve la bonne partie ! »
    ========================================================================== */
 
 /* ---------- utilitaires partagés ---------- */
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+/* Mouvement réduit : la CSS coupe déjà toutes les @keyframes (média-requête en
+   fin de feuille de style), mais deux effets sont produits par le JS et lui
+   échappent — les fondus animés des deux curseurs (requestAnimationFrame) et
+   la pluie de confettis (éléments créés à la volée). On lit donc la
+   préférence ici aussi. MediaQueryList vivant : un enfant qui active
+   « Réduire les animations » en cours de route est pris en compte sans
+   recharger. */
+const REDUIT = matchMedia("(prefers-reduced-motion: reduce)");
 
 /* ---------- fabrique de glissé doux, annulable ----------
    Chaque appel à la fonction retournée démarre un glissé easeOut vers `target`
@@ -1956,6 +2068,10 @@ function makeGlide(setter, getter, duration = 500){
   const token = {gen: 0};
   function glide(target){
     const my = ++token.gen, from = getter(), t0 = performance.now();
+    // mouvement réduit : on saute directement à l'arrivée (une interpolation
+    // sur 500 ms EST du mouvement). Sortie avant la boucle : `duration = 0`
+    // donnerait (now-t0)/0 = NaN à la première frame.
+    if (REDUIT.matches){ setter(target); return; }
     (function step(now){
       if (my !== token.gen) return;                      // une glide plus récente ou un cancel() a pris le relais
       const k = clamp((now - t0) / duration, 0, 1), e = k*(2-k); // easeOut
@@ -1973,6 +2089,9 @@ function makeGlide(setter, getter, duration = 500){
    ========================================================================== */
 let cut = 0;
 const VUES = ["#g-dehors","#g-dedans","#g-prof"];
+// aria-valuetext : sans lui, un lecteur d'écran annonce « 100 sur 200 » — la
+// position brute du curseur, qui ne dit rien. Avec, il annonce « Dedans ».
+const NOM_VUE = ["Dehors","Dedans","Les profondeurs"];
 function setCut(c){
   cut = clamp(c, 0, 2);
   VUES.forEach((sel,i) => {
@@ -1983,8 +2102,10 @@ function setCut(c){
   $("#g-ciel").style.opacity = clamp(2 - cut, 0, 1);   // le ciel partagé s'efface vers les profondeurs
   $("#g-ciel").style.pointerEvents = (cut < 1.5) ? "auto" : "none"; // le nuage cliquable (#d-nuage) ne réagit que si le ciel est visible
   $("#cut").value = Math.round(cut * 100);
+  $("#cut").setAttribute("aria-valuetext", NOM_VUE[Math.round(cut)]);
   $$(".pill").forEach(p => p.classList.toggle("active", +p.dataset.cut === Math.round(cut)));
   document.body.dataset.vue = Math.round(cut);          // accent de couleur par vue via CSS
+  scheduleA11ySync();                                   // cf. section 7 : tri du parcours clavier
 }
 const currentView = () => Math.round(cut);
 const glideCut = makeGlide(setCut, () => cut, 500);
@@ -2024,6 +2145,7 @@ const OPACITES = [
 const MAGMA_Y = [120, 45, 0, 30, 90];       // translateY de #c-magma-colonne (0 = cheminée pleine)
 const CHAMBRE_Y = [0, 8, 26, 14, 4];        // #c-magma-niveau descend pendant l'éruption
 const ROUGE = [0, .12, .75, .4, .05];       // lueur du ciel, appliquée via --rougeoiement
+const NOM_TEMPS = ["Endormi","Le réveil","L'éruption","Les coulées","Le repos"];  // cf. NOM_VUE
 function setTime(t){
   time = clamp(t, 0, 4);
   OPACITES.forEach(([sel, arr]) => { const el = $(sel); if (el) el.style.opacity = lerpArr(arr, time); });
@@ -2033,7 +2155,9 @@ function setTime(t){
   document.body.classList.toggle("tremble", time > .5 && time < 1.6);   // séisme du réveil
   $("#g-prof").classList.toggle("flux-fort", time > 1.4 && time < 2.8); // remontée accélérée
   $("#time").value = Math.round(time * 100);
+  $("#time").setAttribute("aria-valuetext", NOM_TEMPS[Math.round(time)]);
   $$(".moment").forEach(m => m.classList.toggle("active", +m.dataset.time === Math.round(time)));
+  scheduleA11ySync();                                   // cf. section 7 : tri du parcours clavier
 }
 const currentPhase = () => Math.round(time);
 const glideTime = makeGlide(setTime, () => time, 600);
@@ -2211,6 +2335,57 @@ $("#zones").addEventListener("click", () => {
   setTimeout(() => document.body.classList.remove("show-zones"), 3500);
 });
 
+/* ---------- accessibilité des zones (Task 11) ----------
+   1) Chaque .zone reçoit son nom français en aria-label, lu depuis INFO :
+      une seule source de vérité, aucun libellé ne peut diverger du contenu.
+   2) Parcours clavier : les 35 zones vivent en permanence dans le DOM, mais à
+      un instant donné une seule vue est affichée et certaines parties (la
+      coulée, le panache, le séisme…) sont à opacity:0 selon le moment de
+      l'éruption. Sans tri, Tab traverse les 35 dont une trentaine
+      d'invisibles — inutilisable. On sort donc du parcours clavier ET de
+      l'arbre d'accessibilité toute zone réellement inatteignable.
+   Ces trois fonctions sont des DÉCLARATIONS (donc hissées) : setTime(0),
+   exécuté en section 6 bien avant ce bloc, appelle déjà scheduleA11ySync(). */
+function zoneAtteignable(z){
+  // pointer-events est une propriété HÉRITÉE : setCut() la pose sur le groupe
+  // de vue, la valeur calculée sur la zone reflète donc déjà la vue courante.
+  if (getComputedStyle(z).pointerEvents === "none") return false;
+  // l'opacité, elle, ne s'hérite pas : il faut remonter jusqu'au <svg>.
+  for (let n = z; n && n.tagName !== "svg"; n = n.parentElement){
+    if (parseFloat(getComputedStyle(n).opacity) < .05) return false;
+  }
+  return true;
+}
+function syncZonesA11y(){
+  $$(".zone").forEach(z => {
+    const ok = zoneAtteignable(z);
+    z.setAttribute("tabindex", ok ? "0" : "-1");
+    if (ok){ z.removeAttribute("aria-hidden"); return; }
+    // aria-hidden sur l'élément qui a le focus est une faute d'accessibilité
+    // (le lecteur d'écran perd le curseur) : on rend le focus au document.
+    if (document.activeElement === z && typeof z.blur === "function") z.blur();
+    z.setAttribute("aria-hidden", "true");
+  });
+  // Marques orphelines : le halo .selected et l'étiquette flottante restaient
+  // affichés après un changement de vue ou de moment — on se retrouvait avec
+  // « La chambre magmatique » posée en plein milieu du paysage de Dehors.
+  // La carte #info, elle, garde son texte : l'enfant peut encore le relire et
+  // le réécouter, elle ne désigne rien sur le dessin.
+  const sel = $(".zone.selected");
+  if (sel && !zoneAtteignable(sel)){
+    sel.classList.remove("selected");
+    $("#label-flottant").classList.remove("visible");
+  }
+}
+/* Différé de 160 ms : pendant un fondu de 500-600 ms les opacités changent à
+   chaque frame ; on ne recalcule qu'une fois, une fois le fondu arrivé. */
+function scheduleA11ySync(){
+  clearTimeout(scheduleA11ySync._t);
+  scheduleA11ySync._t = setTimeout(syncZonesA11y, 160);
+}
+$$(".zone").forEach(z => { const z2 = INFO[z.id]; if (z2) z.setAttribute("aria-label", z2.n); });
+syncZonesA11y();
+
 /* ==========================================================================
    8) VOIX (off par défaut)
    ========================================================================== */
@@ -2265,13 +2440,23 @@ function updateLens(e){
   if (!r.width || !r.height) return;
   const vx = clamp((e.clientX - r.left) / r.width, 0, 1) * 900;
   const vy = clamp((e.clientY - r.top) / r.height, 0, 1) * 560;
-  // #lens est un cercle 140×140 (ratio 1:1). Une fenêtre 900/Z × 560/Z garde
-  // le ratio 900:560 (~1.61:1) du volcan, PAS celui de la lentille : sans
+  // #lens est un cercle 140×140 (ratio 1:1). Une fenêtre au ratio 900:560
+  // (~1.61:1) du volcan n'est PAS celui de la lentille : sans
   // preserveAspectRatio="none" (qui déformerait le dessin), le comportement
   // par défaut (xMidYMid meet) case cette fenêtre large dans le cercle et
   // laisse des bandes vides en haut/bas — un letterboxing constant qui coupe
   // le rond. La fenêtre de viewBox doit donc être CARRÉE, comme la lentille.
-  const side = 900 / LENS_ZOOM;
+  //
+  // Le côté se déduit de l'échelle RÉELLE du dessin à l'écran, pas d'une
+  // fraction fixe du viewBox : `900 / LENS_ZOOM` donnait une fenêtre de 409
+  // unités affichée dans 140 px, soit 0,34 px/unité, alors que le volcan est
+  // rendu vers 0,69 px/unité — la « loupe » réduisait donc de moitié au lieu
+  // de grossir. On veut LENS_ZOOM fois l'échelle de la scène :
+  //   côté = LENS_PX / (échelle_scène × LENS_ZOOM).
+  // Le clamp haut à 560 (la plus petite dimension du viewBox) évite une
+  // fenêtre plus grande que le dessin si la scène est rendue très petite.
+  const echelle = r.width / 900;                       // px écran par unité de viewBox
+  const side = clamp(LENS_PX / (echelle * LENS_ZOOM), 24, 560);
   lens.setAttribute("viewBox",
     `${clamp(vx - side / 2, 0, 900 - side)} ${clamp(vy - side / 2, 0, 560 - side)} ${side} ${side}`);
   // La lentille elle-même reste dans les bords de .svgbox (position:relative)
@@ -2363,6 +2548,11 @@ function startQuiz(){
   const qs = [...QUIZ_POOL].sort(() => Math.random() - .5).slice(0, 3);
   quiz = { questions: qs, index: 0, stars: 0, timer: null, waiting: false };
   $("#quiz").classList.add("open");
+  // Sur téléphone, la colonne unique met le bouton « Le jeu » très loin sous
+  // la scène : le bandeau de question s'ouvre alors hors écran, au-dessus du
+  // SVG. block:"nearest" ne fait rien si le bandeau est déjà visible (cas du
+  // grand écran) et défile du minimum nécessaire sinon.
+  $("#quiz").scrollIntoView({ block: "nearest", behavior: REDUIT.matches ? "auto" : "smooth" });
   renderStars();
   askNext();
 }
@@ -2406,7 +2596,12 @@ function onZoneClickInQuiz(id){
     setTimeout(() => qEl.classList.remove("shake"), 500);
   }
 }
-function renderStars(){ $("#quizStars").textContent = "⭐".repeat(quiz.stars); }
+function renderStars(){
+  const s = $("#quizStars");
+  s.textContent = "⭐".repeat(quiz.stars);
+  s.setAttribute("aria-label", quiz.stars === 0 ? "Aucune étoile"
+                             : quiz.stars === 1 ? "1 étoile" : `${quiz.stars} étoiles`);
+}
 function endQuiz(){
   $("#quizQ").textContent = "Bravo, champion des volcans ! ⭐⭐⭐";
   say("Bravo, tu es un vrai petit volcanologue !");
@@ -2424,6 +2619,7 @@ function closeQuiz(){
   quiz = null;
   $("#quizQ").textContent = "";
   $("#quizStars").textContent = "";
+  $("#quizStars").setAttribute("aria-label", "Aucune étoile");
   $("#label-flottant").classList.remove("visible");     // étiquette flottante laissée par une exploration précédente
 }
 $("#jeu").addEventListener("click", startQuiz);
@@ -2436,6 +2632,7 @@ $("#quizQuit").addEventListener("click", closeQuiz);
 const CONFETTI_EMOJI = ["🎉","⭐","🌋"];
 const CONFETTI_COLORS = ["#ff5a2a","#ffb15c","#7ed98a","#8fd3ff","#ffe066"];
 function confetti(){
+  if (REDUIT.matches) return;      // 24 particules qui tombent : rien de plus « animé »
   const layer = $("#confetti-layer");
   for (let i = 0; i < 24; i++){
     const p = document.createElement("i");
