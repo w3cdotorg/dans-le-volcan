@@ -152,15 +152,25 @@ h1 .volcan-em{display:inline-block;animation:secousse 2.6s ease-in-out infinite;
 
 /* ------------------------------- scène (le volcan) */
 .scene{position:relative;display:flex;flex-direction:column;gap:clamp(10px,2vw,16px)}
+/* --hauteur-svg : hauteur maximale accordée au dessin. La largeur de .svgbox
+   en est déduite au ratio 900:560 (= 45/28) du viewBox — c'est ce qui empêche
+   le letterboxing (Task 11) : avec seulement `width:100%` + `max-height`, une
+   fenêtre large et courte (téléphone couché, écran 16:9 réduit) bridait la
+   hauteur du dessin sans réduire sa boîte, et le SVG flottait au milieu de
+   bandes vides, ses bords droits contredisant les coins arrondis de la boîte.
+   Bonus : la conversion écran → viewBox de la loupe et de l'étiquette n'a plus
+   jamais à composer avec un décalage de centrage. */
 .svgbox{
+  --hauteur-svg:min(58vh,560px);
   position:relative;
   margin:2px auto 0;width:100%;
+  max-width:calc(var(--hauteur-svg) * 45 / 28);
   border-radius:var(--r-md);
   overflow:hidden;
   background:radial-gradient(60% 45% at 50% 100%, rgba(255,140,70,.18), transparent 70%);
 }
-svg#volcan{display:block;width:100%;height:auto;max-height:min(58vh,560px);margin:0 auto}
-@media (max-width:900px){ svg#volcan{max-height:52vh} }
+svg#volcan{display:block;width:100%;height:auto;max-height:var(--hauteur-svg);margin:0 auto}
+@media (max-width:900px){ .svgbox{--hauteur-svg:52vh} }
 
 /* ------------------------------- loupe (Task 9) */
 .scene.lens-on svg#volcan{cursor:none;touch-action:none}   /* le doigt déplace la loupe, pas la page */
@@ -2438,8 +2448,17 @@ const lens = $("#lens"), sceneSvg = $("#volcan"), LENS_PX = 140, LENS_ZOOM = 2.2
 function updateLens(e){
   const r = sceneSvg.getBoundingClientRect();
   if (!r.width || !r.height) return;
-  const vx = clamp((e.clientX - r.left) / r.width, 0, 1) * 900;
-  const vy = clamp((e.clientY - r.top) / r.height, 0, 1) * 560;
+  // Le DESSIN ne remplit pas forcément la boîte du <svg> : `max-height` peut
+  // le brider (fenêtre large et courte), et preserveAspectRatio="xMidYMid
+  // meet" le centre alors en laissant des bandes vides sur les côtés. Mesurer
+  // la position du curseur sur la boîte plutôt que sur le dessin décalerait
+  // la loupe de toute la largeur d'une bande. On refait donc le calcul de
+  // « meet » : une seule échelle (la plus petite) et un centrage.
+  const echelle = Math.min(r.width / 900, r.height / 560);   // px écran par unité de viewBox
+  const decX = (r.width  - 900 * echelle) / 2;
+  const decY = (r.height - 560 * echelle) / 2;
+  const vx = clamp((e.clientX - r.left - decX) / echelle, 0, 900);
+  const vy = clamp((e.clientY - r.top  - decY) / echelle, 0, 560);
   // #lens est un cercle 140×140 (ratio 1:1). Une fenêtre au ratio 900:560
   // (~1.61:1) du volcan n'est PAS celui de la lentille : sans
   // preserveAspectRatio="none" (qui déformerait le dessin), le comportement
@@ -2447,15 +2466,14 @@ function updateLens(e){
   // laisse des bandes vides en haut/bas — un letterboxing constant qui coupe
   // le rond. La fenêtre de viewBox doit donc être CARRÉE, comme la lentille.
   //
-  // Le côté se déduit de l'échelle RÉELLE du dessin à l'écran, pas d'une
-  // fraction fixe du viewBox : `900 / LENS_ZOOM` donnait une fenêtre de 409
-  // unités affichée dans 140 px, soit 0,34 px/unité, alors que le volcan est
-  // rendu vers 0,69 px/unité — la « loupe » réduisait donc de moitié au lieu
-  // de grossir. On veut LENS_ZOOM fois l'échelle de la scène :
-  //   côté = LENS_PX / (échelle_scène × LENS_ZOOM).
+  // Le côté se déduit de l'échelle RÉELLE du dessin à l'écran (calculée
+  // ci-dessus), pas d'une fraction fixe du viewBox : `900 / LENS_ZOOM` donnait
+  // une fenêtre de 409 unités affichée dans 140 px, soit 0,34 px/unité, alors
+  // que le volcan est rendu vers 0,69 px/unité — la « loupe » réduisait donc
+  // de moitié au lieu de grossir. On veut LENS_ZOOM fois l'échelle de la
+  // scène :  côté = LENS_PX / (échelle_scène × LENS_ZOOM).
   // Le clamp haut à 560 (la plus petite dimension du viewBox) évite une
   // fenêtre plus grande que le dessin si la scène est rendue très petite.
-  const echelle = r.width / 900;                       // px écran par unité de viewBox
   const side = clamp(LENS_PX / (echelle * LENS_ZOOM), 24, 560);
   lens.setAttribute("viewBox",
     `${clamp(vx - side / 2, 0, 900 - side)} ${clamp(vy - side / 2, 0, 560 - side)} ${side} ${side}`);
